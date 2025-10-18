@@ -49,5 +49,31 @@
     </div>
 
     <script src="js/auth.js"></script>
+    <script>
+// Kiểm tra trực tiếp
+console.log('Register page loaded');
+console.log('Register form:', document.getElementById('registerForm'));
+console.log('Current users in localStorage:', localStorage.getItem('users'));
+
+// Thử đăng ký thủ công
+function testRegister() {
+    const username = 'testuser';
+    const password = 'testpass';
+    
+    const users = JSON.parse(localStorage.getItem('users')) || [];
+    const newUser = {
+        username,
+        password,
+        balance: 0,
+        isAdmin: false,
+        createdAt: new Date().toISOString()
+    };
+    
+    users.push(newUser);
+    localStorage.setItem('users', JSON.stringify(users));
+    console.log('Test user added:', newUser);
+    alert('Test user added: ' + username);
+}
+</script>
 </body>
 </html>

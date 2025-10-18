@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LDP TOOLS - Tool V1</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <!-- Animated Background -->
+    <div class="animated-bg">
+        <div class="light-beam"></div>
+        <div class="light-beam"></div>
+        <div class="light-beam"></div>
+    </div>
+
+    <!-- Header -->
+    <header class="main-header">
+        <div class="menu-icon" id="menuIcon">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+        <a href="home.html" class="logo">LDP TOOLS</a>
+        <div class="user-info">
+            <span class="username" id="headerUsername">Username</span>
+            <div class="balance-box" id="headerBalance">0đ</div>
+        </div>
+    </header>
+
+    <!-- Sidebar -->
+    <nav class="sidebar" id="sidebar">
+        <ul>
+            <li onclick="window.location.href='home.html'">
+                <i>🏠</i> Trang chủ
+            </li>
+            <li onclick="window.location.href='#account'">
+                <i>👤</i> Kiểm tra tài khoản
+            </li>
+            <li onclick="window.location.href='deposit.html'">
+                <i>💰</i> Nạp tiền
+            </li>
+            <li onclick="showHistory()">
+                <i>📜</i> Lịch sử mua
+            </li>
+            <li id="adminPanelLink" class="hidden" onclick="window.location.href='admin-panel.html'">
+                <i>⚙️</i> Control Panel
+            </li>
+            <li onclick="logout()">
+                <i>🚪</i> Đăng xuất
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Chat Container -->
+        <div class="chat-container">
+            <div class="chat-header">
+                <div class="chat-title">
+                    <span>🎲</span>
+                    <span>Tool V1 - Dự đoán Tài Xỉu</span>
+                </div>
+                <div class="chat-settings">
+                    <button class="settings-btn" onclick="customizeChat()">🎨 Tùy chỉnh</button>
+                    <button class="settings-btn" onclick="resetChat()">🔄 Reset</button>
+                </div>
+            </div>
+
+            <div class="chat-messages" id="chatMessages">
+                <div class="message bot">
+                    <div>Xin chào! Tôi là Bot hỗ trợ Tool V1. Để bắt đầu, vui lòng gõ <strong>START</strong> 🚀</div>
+                    <div class="message-time" id="botTime"></div>
+                </div>
+            </div>
+
+            <div class="chat-input-area">
+                <textarea class="chat-input" id="chatInput" placeholder="Nhập tin nhắn..." rows="1"></textarea>
+                <button class="send-btn" onclick="sendMessage()">
+                    <span>➤</span>
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Notification -->
+    <div id="notification" class="notification">
+        <div class="notification-icon">✓</div>
+        <div class="notification-content">
+            <div class="notification-title">Thông báo</div>
+            <div class="notification-message">Message here</div>
+        </div>
+    </div>
+
+    <!-- Customize Modal -->
+    <div id="customizeModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Tùy Chỉnh Giao Diện</h3>
+                <button class="close-modal" onclick="closeModal('customizeModal')">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Màu chủ đạo</label>
+                    <select class="admin-select" id="themeColor">
+                        <option value="purple">Tím (Mặc định)</option>
+                        <option value="blue">Xanh Dương</option>
+                        <option value="green">Xanh Lá</option>
+                        <option value="red">Đỏ</option>
+                        <option value="orange">Cam</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Kiểu chat</label>
+                    <select class="admin-select" id="chatStyle">
+                        <option value="default">Mặc định</option>
+                        <option value="compact">Gọn nhẹ</option>
+                        <option value="spacious">Rộng rãi</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn primary" onclick="applyCustomize()">Áp dụng</button>
+                <button class="modal-btn secondary" onclick="closeModal('customizeModal')">Hủy</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/toolv1.js"></script>
+</body>
+</html>

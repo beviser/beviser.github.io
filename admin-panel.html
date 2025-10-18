@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LDP TOOLS - Admin Panel</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <!-- Animated Background -->
+    <div class="animated-bg">
+        <div class="light-beam"></div>
+        <div class="light-beam"></div>
+        <div class="light-beam"></div>
+    </div>
+
+    <!-- Header -->
+    <header class="main-header">
+        <div class="menu-icon" id="menuIcon">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+        <a href="home.html" class="logo">LDP TOOLS</a>
+        <div class="user-info">
+            <span class="username" id="headerUsername">Admin</span>
+            <div class="balance-box" id="headerBalance">100,000,000đ</div>
+        </div>
+    </header>
+
+    <!-- Sidebar -->
+    <nav class="sidebar" id="sidebar">
+        <ul>
+            <li onclick="window.location.href='home.html'">
+                <i>🏠</i> Trang chủ
+            </li>
+            <li onclick="window.location.href='#account'">
+                <i>👤</i> Kiểm tra tài khoản
+            </li>
+            <li onclick="window.location.href='deposit.html'">
+                <i>💰</i> Nạp tiền
+            </li>
+            <li onclick="showHistory()">
+                <i>📜</i> Lịch sử mua
+            </li>
+            <li onclick="window.location.href='admin-panel.html'">
+                <i>⚙️</i> Control Panel
+            </li>
+            <li onclick="logout()">
+                <i>🚪</i> Đăng xuất
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="admin-container">
+            <div class="admin-header">
+                <h1 class="admin-title">CONTROL PANEL</h1>
+                <p class="admin-subtitle">Quản lý hệ thống LDP Tools</p>
+            </div>
+
+            <!-- Statistics -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="totalUsers">0</div>
+                    <div class="stat-label">Tổng người dùng</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="totalRevenue">0đ</div>
+                    <div class="stat-label">Tổng doanh thu</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="activeTools">0</div>
+                    <div class="stat-label">Tool đang hoạt động</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="totalVouchers">0</div>
+                    <div class="stat-label">Mã giảm giá</div>
+                </div>
+            </div>
+
+            <!-- Admin Panels Grid -->
+            <div class="admin-grid">
+                <!-- User Management Panel -->
+                <div class="admin-panel">
+                    <div class="panel-header">
+                        <div class="panel-icon">👥</div>
+                        <h3 class="panel-title">Danh Sách User</h3>
+                    </div>
+                    <div class="user-list" id="userList">
+                        <!-- Users will be loaded here -->
+                        <div class="empty-state">
+                            <div class="empty-icon">👤</div>
+                            <div class="empty-title">Chưa có người dùng</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Transfer Money Panel -->
+                <div class="admin-panel">
+                    <div class="panel-header">
+                        <div class="panel-icon">💸</div>
+                        <h3 class="panel-title">Chuyển Tiền Cho User</h3>
+                    </div>
+                    <form class="admin-form" id="transferForm">
+                        <div class="form-group">
+                            <label>Tên tài khoản người nhận</label>
+                            <input type="text" class="admin-input" id="transferUsername" placeholder="Nhập username" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Số tiền chuyển</label>
+                            <input type="number" class="admin-input" id="transferAmount" placeholder="Nhập số tiền" min="1000" required>
+                        </div>
+                        <button type="submit" class="submit-btn">💰 Chuyển tiền ngay</button>
+                    </form>
+                </div>
+
+                <!-- Ban User Panel -->
+                <div class="admin-panel">
+                    <div class="panel-header">
+                        <div class="panel-icon">🚫</div>
+                        <h3 class="panel-title">Ban User</h3>
+                    </div>
+                    <form class="admin-form" id="banForm">
+                        <div class="form-group">
+                            <label>Tên tài khoản cần ban</label>
+                            <input type="text" class="admin-input" id="banUsername" placeholder="Nhập username" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Lý do ban</label>
+                            <textarea class="admin-input" id="banReason" placeholder="Nhập lý do..." rows="3"></textarea>
+                        </div>
+                        <button type="submit" class="submit-btn" style="background: var(--error-red);">🚫 Ban user này</button>
+                    </form>
+                </div>
+
+                <!-- Create Voucher Panel -->
+                

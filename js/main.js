@@ -537,14 +537,15 @@ function copyKey() {
 // main.js - SỬA LỊCH SỬ MUA HÀNG
 function showHistory() {
     const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-    const purchaseHistory = JSON.parse(localStorage.getItem('purchaseHistory')) || [];
+    if (!currentUser) return;
     
-    // Lọc lịch sử của user hiện tại
+    const purchaseHistory = JSON.parse(localStorage.getItem('purchaseHistory')) || [];
     const userHistory = purchaseHistory.filter(item => item.username === currentUser.username);
     
     const historyContent = document.getElementById('historyContent');
     if (!historyContent) {
-        showNotification('Không tìm thấy phần tử lịch sử!', 'error');
+        // Tạo modal history nếu chưa có
+        createHistoryModal();
         return;
     }
     
@@ -559,23 +560,30 @@ function showHistory() {
             </div>
         `;
     } else {
+        // Sắp xếp theo thời gian mua mới nhất
+        userHistory.sort((a, b) => b.purchaseDate - a.purchaseDate);
+        
         userHistory.forEach((item, index) => {
             const isActive = item.expiry > Date.now();
+            const timeLeft = item.expiry - Date.now();
+            const hoursLeft = Math.floor(timeLeft / (1000 * 60 * 60));
+            const minutesLeft = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+            
             const historyCard = document.createElement('div');
             historyCard.className = 'history-card';
             historyCard.innerHTML = `
                 <div class="history-header">
-                    <div class="history-tool-name">${getToolName(item.toolName)}</div>
-                    <div class="history-date">${new Date(item.purchaseDate).toLocaleDateString('vi-VN')}</div>
+                    <div class="history-tool-name">${getToolDisplayName(item.toolName)}</div>
+                    <div class="history-date">${new Date(item.purchaseDate).toLocaleDateString('vi-VN')} - ${new Date(item.purchaseDate).toLocaleTimeString('vi-VN')}</div>
                 </div>
                 <div class="history-details">
                     <div class="history-detail-item">
-                        <div class="detail-label">Key</div>
-                        <div class="detail-value">${item.key}</div>
+                        <div class="detail-label">Key kích hoạt</div>
+                        <div class="detail-value" style="font-family: monospace; color: var(--accent-purple);">${item.key}</div>
                     </div>
                     <div class="history-detail-item">
-                        <div class="detail-label">Thời gian</div>
-                        <div class="detail-value">${formatDuration(item.duration)}</div>
+                        <div class="detail-label">Thời gian thuê</div>
+                        <div class="detail-value">${item.durationType || getDurationText(item.duration)}</div>
                     </div>
                     <div class="history-detail-item">
                         <div class="detail-label">Giá</div>
@@ -592,30 +600,47 @@ function showHistory() {
                 <div class="timer-display">
                     <span class="timer-icon">⏱️</span>
                     <span class="timer-text">Thời gian còn lại: 
-                        <span class="timer-value" id="historyTimer${index}">--:--:--</span>
+                        <span class="timer-value" id="historyTimer${index}">${hoursLeft > 0 ? hoursLeft + ' giờ ' : ''}${minutesLeft} phút</span>
                     </span>
                 </div>
                 ` : ''}
             `;
             historyContent.appendChild(historyCard);
-            
-            // Cập nhật bộ đếm thời gian nếu còn active
-            if (isActive) {
-                updateHistoryTimer(`historyTimer${index}`, item.expiry);
-            }
         });
     }
     
     showModal('historyModal');
 }
 
-function getToolName(toolKey) {
+function getToolDisplayName(toolKey) {
     const toolNames = {
         'toolv1': 'Tool V1 - Dự đoán Tài Xỉu',
         'toolmd5': 'Tool MD5 - Giải mã MD5',
         'toolsicbo': 'Tool Sicbo - Phát hiện BÃO'
     };
     return toolNames[toolKey] || toolKey;
+}
+
+// Tạo modal history nếu chưa có
+function createHistoryModal() {
+    const modalHTML = `
+        <div id="historyModal" class="modal">
+            <div class="modal-content" style="max-width: 800px;">
+                <div class="modal-header">
+                    <h3 class="modal-title">Lịch Sử Mua Hàng</h3>
+                    <button class="close-modal" onclick="closeModal('historyModal')">×</button>
+                </div>
+                <div class="modal-body">
+                    <div id="historyContent" class="history-container">
+                        <!-- History will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
+    showHistory(); // Gọi lại để hiển thị nội dung
 }
 
 function formatDuration(duration) {
@@ -827,6 +852,7 @@ function applyVoucher() {
     showNotification('Mã giảm giá không hợp lệ hoặc đã hết hạn!', 'error');
 
 }
+
 
 
 

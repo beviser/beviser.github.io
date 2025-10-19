@@ -537,6 +537,18 @@ function getToolName(toolKey) {
     return toolNames[toolKey] || toolKey;
 }
 
+function formatDuration(duration) {
+    if (duration < 24) {
+        return `${duration} giờ`;
+    } else if (duration === 24) {
+        return '1 ngày';
+    } else if (duration === 168) {
+        return '1 tuần';
+    } else {
+        return `${duration} giờ`;
+    }
+}
+
 function updateHistoryTimer(elementId, expiry) {
     const timerElement = document.getElementById(elementId);
     if (!timerElement) return;
@@ -734,3 +746,4 @@ function applyVoucher() {
     showNotification('Mã giảm giá không hợp lệ hoặc đã hết hạn!', 'error');
 
 }
+

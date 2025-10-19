@@ -308,21 +308,23 @@ function closeModal(modalId) {
 }
 
 function applyCustomize() {
-    const themeColor = document.getElementById('themeColor');
-    const chatStyle = document.getElementById('chatStyle');
-    
-    if (!themeColor || !chatStyle) {
-        console.error('Customize elements not found');
-        return;
-    }
-    
-    const selectedColor = themeColor.value;
-    const selectedStyle = chatStyle.value;
-    
-    // Áp dụng tùy chỉnh
-    document.documentElement.style.setProperty('--primary-purple', getColorValue(selectedColor));
-    document.body.setAttribute('data-chat-style', selectedStyle);
-    
+    const themeColor = document.getElementById('themeColor').value;
+    const chatStyle = document.getElementById('chatStyle').value;
+
+    // Áp dụng màu chủ đạo
+    document.documentElement.style.setProperty('--primary-purple', getColorValue(themeColor));
+
+    // Áp dụng kiểu chat
+    const chatMessages = document.getElementById('chatMessages');
+    chatMessages.className = 'chat-messages ' + chatStyle;
+
+    // Lưu cài đặt
+    const settings = {
+        themeColor: themeColor,
+        chatStyle: chatStyle
+    };
+    localStorage.setItem('chatSettings', JSON.stringify(settings));
+
     showNotification('Đã áp dụng tùy chỉnh!');
     closeModal('customizeModal');
 }

@@ -258,46 +258,63 @@ function showHistory() {
 }
 
 // Tùy chỉnh chat
+// SỬA HÀM TÙY CHỈNH - HOẠT ĐỘNG THỰC SỰ
 function customizeChat() {
+    console.log('Opening customize modal');
     const modal = document.getElementById('customizeModal');
     if (modal) {
+        // Load saved settings
+        const savedSettings = JSON.parse(localStorage.getItem('chatSettings')) || {};
+        document.getElementById('themeColor').value = savedSettings.themeColor || 'purple';
+        document.getElementById('chatStyle').value = savedSettings.chatStyle || 'default';
+        document.getElementById('fontSize').value = savedSettings.fontSize || 'normal';
+        
         modal.classList.add('show');
-    }
-}
-
-function resetChat() {
-    if (confirm('Bạn có chắc muốn reset cuộc trò chuyện?')) {
-        window.location.reload();
-    }
-}
-
-function closeModal(modalId) {
-    const modal = document.getElementById(modalId);
-    if (modal) {
-        modal.classList.remove('show');
+    } else {
+        console.error('Customize modal not found!');
     }
 }
 
 function applyCustomize() {
     const themeColor = document.getElementById('themeColor').value;
     const chatStyle = document.getElementById('chatStyle').value;
-
-    // Áp dụng màu chủ đạo
-    document.documentElement.style.setProperty('--primary-purple', getColorValue(themeColor));
-
-    // Áp dụng kiểu chat
-    const chatMessages = document.getElementById('chatMessages');
-    chatMessages.className = 'chat-messages ' + chatStyle;
-
+    const fontSize = document.getElementById('fontSize').value;
+    
     // Lưu cài đặt
     const settings = {
         themeColor: themeColor,
-        chatStyle: chatStyle
+        chatStyle: chatStyle,
+        fontSize: fontSize
     };
     localStorage.setItem('chatSettings', JSON.stringify(settings));
-
+    
+    // Áp dụng ngay lập tức
+    applyChatCustomization(settings);
     showNotification('Đã áp dụng tùy chỉnh!');
     closeModal('customizeModal');
+}
+
+function applyChatCustomization(settings) {
+    // Áp dụng màu sắc
+    document.documentElement.style.setProperty('--primary-purple', getColorValue(settings.themeColor));
+    document.documentElement.style.setProperty('--accent-purple', getAccentColor(settings.themeColor));
+    
+    // Áp dụng kiểu chat
+    const chatMessages = document.getElementById('chatMessages');
+    const chatContainer = document.querySelector('.chat-container');
+    
+    if (chatMessages) {
+        chatMessages.className = 'chat-messages';
+        chatMessages.classList.add(settings.chatStyle);
+    }
+    
+    if (chatContainer) {
+        chatContainer.className = 'chat-container';
+        chatContainer.classList.add(settings.chatStyle);
+    }
+    
+    // Áp dụng kích thước chữ
+    document.body.style.fontSize = getFontSize(settings.fontSize);
 }
 
 function getColorValue(color) {
@@ -311,3 +328,30 @@ function getColorValue(color) {
     return colors[color] || colors.purple;
 }
 
+function getAccentColor(color) {
+    const colors = {
+        purple: '#9333EA',
+        blue: '#2563EB',
+        green: '#059669',
+        red: '#DC2626',
+        orange: '#D97706'
+    };
+    return colors[color] || colors.purple;
+}
+
+function getFontSize(size) {
+    const sizes = {
+        normal: '14px',
+        large: '16px',
+        xlarge: '18px'
+    };
+    return sizes[size] || sizes.normal;
+}
+
+// Áp dụng cài đặt khi trang load
+document.addEventListener('DOMContentLoaded', function() {
+    const savedSettings = JSON.parse(localStorage.getItem('chatSettings'));
+    if (savedSettings) {
+        applyChatCustomization(savedSettings);
+    }
+});

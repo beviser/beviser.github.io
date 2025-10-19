@@ -91,6 +91,47 @@
             <div class="notification-message">Message here</div>
         </div>
     </div>
+    <!-- Background Customize Modal -->
+<div id="backgroundModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 class="modal-title">Tùy Chỉnh Giao Diện</h3>
+            <button class="close-modal" onclick="closeModal('backgroundModal')">×</button>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label>Màu nền chủ đạo</label>
+                <select class="admin-select" id="backgroundColor">
+                    <option value="default">Tím (Mặc định)</option>
+                    <option value="blue">Xanh Dương</option>
+                    <option value="green">Xanh Lá</option>
+                    <option value="red">Đỏ</option>
+                    <option value="dark">Tối</option>
+                    <option value="ocean">Đại dương</option>
+                    <option value="sunset">Hoàng hôn</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Hiệu ứng nền</label>
+                <select class="admin-select" id="backgroundEffect">
+                    <option value="beams">Tia sáng (Mặc định)</option>
+                    <option value="particles">Hạt粒子</option>
+                    <option value="stars">Sao</option>
+                    <option value="none">Không hiệu ứng</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Độ sáng</label>
+                <input type="range" id="backgroundBrightness" min="50" max="150" value="100" class="admin-input">
+                <span id="brightnessValue">100%</span>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="modal-btn primary" onclick="applyBackgroundSettings()">Áp dụng</button>
+            <button class="modal-btn secondary" onclick="closeModal('backgroundModal')">Hủy</button>
+        </div>
+    </div>
+</div>
 
     <!-- Customize Modal -->
     <div id="customizeModal" class="modal">
@@ -155,4 +196,5 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 </body>
 </html>
+
 

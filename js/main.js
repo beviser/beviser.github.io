@@ -33,6 +33,56 @@ document.addEventListener('DOMContentLoaded', function() {
     initPriceOptions();
 });
 
+function applyVoucher(toolName) {
+    const voucherInput = document.getElementById(`voucherInput${toolName}`).value.trim();
+    if (!voucherInput) {
+        showNotification('Vui lòng nhập mã giảm giá!', 'error');
+        return;
+    }
+
+    const vouchers = JSON.parse(localStorage.getItem('vouchers')) || [];
+    const voucher = vouchers.find(v => v.code === voucherInput && (v.tool === toolName || v.tool === 'all'));
+
+    if (!voucher) {
+        showNotification('Mã giảm giá không hợp lệ!', 'error');
+        return;
+    }
+
+    if (voucher.expiry < Date.now()) {
+        showNotification('Mã giảm giá đã hết hạn!', 'error');
+        return;
+    }
+
+    if (voucher.usedCount >= voucher.maxUses) {
+        showNotification('Mã giảm giá đã hết lượt sử dụng!', 'error');
+        return;
+    }
+
+    // Lưu thông tin voucher đã áp dụng cho tool này
+    selectedPrices[toolName].voucher = voucher;
+
+    showNotification(`Áp dụng thành công! Giảm ${voucher.discount}% cho ${toolName}`);
+
+    // Cập nhật giao diện hiển thị giá
+    updateAllPricesDisplay(toolName, voucher.discount);
+}
+
+function updateAllPricesDisplay(toolName, discount) {
+    const toolCard = document.getElementById(`${toolName}Card`);
+    const priceOptions = toolCard.querySelectorAll('.price-option');
+    priceOptions.forEach(option => {
+        const originalPrice = parseInt(option.getAttribute('data-price'));
+        const discountedPrice = originalPrice - (originalPrice * discount) / 100;
+        const priceAmount = option.querySelector('.price-amount');
+        if (priceAmount) {
+            priceAmount.innerHTML = `
+                <span style="text-decoration: line-through; color: var(--error-red); font-size: 0.8em;">${formatCurrency(originalPrice)}</span>
+                <br>${formatCurrency(discountedPrice)}
+            `;
+        }
+    });
+}
+
 // Khởi tạo sự kiện cho các lựa chọn giá
 function initPriceOptions() {
     document.querySelectorAll('.price-option').forEach(option => {
@@ -746,4 +796,5 @@ function applyVoucher() {
     showNotification('Mã giảm giá không hợp lệ hoặc đã hết hạn!', 'error');
 
 }
+
 

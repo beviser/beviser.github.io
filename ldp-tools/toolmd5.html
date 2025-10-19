@@ -127,5 +127,32 @@
     </div>
 
     <script src="js/toolmd5.js"></script>
+<script>
+// Mouse trail effect
+document.addEventListener('mousemove', function(e) {
+    const trail = document.createElement('div');
+    trail.className = 'mouse-trail';
+    trail.style.left = e.pageX - 3 + 'px';
+    trail.style.top = e.pageY - 3 + 'px';
+    document.body.appendChild(trail);
+    
+    setTimeout(() => {
+        trail.remove();
+    }, 600);
+});
+
+// Background theme selector
+function changeBackgroundTheme(theme) {
+    document.body.setAttribute('data-bg-theme', theme);
+    localStorage.setItem('bgTheme', theme);
+}
+
+// Load saved background theme
+document.addEventListener('DOMContentLoaded', function() {
+    const savedTheme = localStorage.getItem('bgTheme') || 'default';
+    changeBackgroundTheme(savedTheme);
+});
+</script>
 </body>
 </html>
+

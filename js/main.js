@@ -374,12 +374,18 @@ function buyTool(toolName) {
     const tools = JSON.parse(localStorage.getItem('tools')) || {};
 
     const selectedPrice = selectedPrices[toolName];
+    let totalPrice = selectedPrice.price * quantity;
     const quantityInput = document.getElementById(`${toolName}Quantity`);
     const quantity = quantityInput ? parseInt(quantityInput.value) || 1 : 1;
 
     // Tính tổng thời gian (đơn vị: giờ)
     const totalDuration = selectedPrice.duration * quantity;
     const totalPrice = selectedPrice.price * quantity;
+
+    if (selectedPrice.voucher) {
+        const discount = selectedPrice.voucher.discount;
+        totalPrice = totalPrice - (totalPrice * discount) / 100;
+    }
 
     if (currentUser.balance < totalPrice) {
         showNotification('Số dư không đủ! Vui lòng nạp thêm tiền.', 'error');
@@ -796,5 +802,6 @@ function applyVoucher() {
     showNotification('Mã giảm giá không hợp lệ hoặc đã hết hạn!', 'error');
 
 }
+
 
 

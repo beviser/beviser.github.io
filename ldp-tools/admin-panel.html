@@ -89,7 +89,6 @@
                         <h3 class="panel-title">Danh Sách User</h3>
                     </div>
                     <div class="user-list" id="userList">
-                        <!-- Users will be loaded here -->
                         <div class="empty-state">
                             <div class="empty-icon">👤</div>
                             <div class="empty-title">Chưa có người dùng</div>
@@ -148,10 +147,11 @@
                                 <option value="toolv1">Tool V1</option>
                                 <option value="toolmd5">Tool MD5</option>
                                 <option value="toolsicbo">Tool Sicbo</option>
+                                <option value="all">Tất cả tools</option>
                             </select>
                         </div>
                         <div class="form-group">
-                            <label>Phần trăm giảm giá</label>
+                            <label>Phần trăm giảm giá (%)</label>
                             <input type="number" class="admin-input" id="voucherDiscount" placeholder="Nhập % giảm giá" min="1" max="100" required>
                         </div>
                         <div class="form-group">
@@ -193,32 +193,74 @@
     </div>
 
     <script>
-        // admin.js - Xử lý admin panel (HOÀN TOÀN MỚI)
+        // =============================================
+        // ADMIN PANEL - HOÀN CHỈNH VỚI TẤT CẢ TÍNH NĂNG
+        // =============================================
 
-        // Biến toàn cục để theo dõi dữ liệu
+        // Biến toàn cục
         let currentUsers = [];
+        let currentVouchers = [];
 
+        // Khởi tạo khi trang load
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('=== ADMIN PANEL INIT ===');
+            console.log('🚀 ADMIN PANEL - INITIALIZING...');
             
+            // Kiểm tra đăng nhập và quyền admin
             const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-            
-            // Kiểm tra quyền admin
             if (!currentUser || !currentUser.isAdmin) {
-                alert('Bạn không có quyền truy cập admin panel!');
+                alert('⚠️ Bạn không có quyền truy cập admin panel!');
                 window.location.href = 'index.html';
                 return;
             }
             
-            console.log('Admin user:', currentUser);
+            console.log('✅ Admin user authenticated:', currentUser.username);
             
+            // Khởi tạo dữ liệu nếu chưa có
+            initializeData();
+            
+            // Cập nhật giao diện
             updateHeaderInfo(currentUser);
             initSidebar();
             loadAdminData();
             setupEventListeners();
+            
+            console.log('🎯 ADMIN PANEL READY');
         });
 
-        // Cập nhật thông tin header
+        // Khởi tạo dữ liệu
+        function initializeData() {
+            // Khởi tạo users nếu chưa có
+            if (!localStorage.getItem('users')) {
+                const users = [
+                    {
+                        username: 'bevis',
+                        password: 'leduc',
+                        balance: 100000000,
+                        isAdmin: true,
+                        createdAt: new Date().toISOString()
+                    }
+                ];
+                localStorage.setItem('users', JSON.stringify(users));
+                console.log('📝 Initialized default admin user');
+            }
+            
+            // Khởi tạo tools nếu chưa có
+            if (!localStorage.getItem('tools')) {
+                const tools = {
+                    'toolv1': { active: false, expiry: null, key: null },
+                    'toolmd5': { active: false, expiry: null, key: null },
+                    'toolsicbo': { active: false, expiry: null, key: null }
+                };
+                localStorage.setItem('tools', JSON.stringify(tools));
+            }
+            
+            // Khởi tạo vouchers nếu chưa có
+            if (!localStorage.getItem('vouchers')) {
+                localStorage.setItem('vouchers', JSON.stringify([]));
+            }
+        }
+
+        // Cập nhật header
         function updateHeaderInfo(user) {
             const usernameEl = document.getElementById('headerUsername');
             const balanceEl = document.getElementById('headerBalance');
@@ -262,6 +304,10 @@
             // Form tạo voucher
             const voucherForm = document.getElementById('voucherForm');
             if (voucherForm) {
+                // Set min date to today
+                const today = new Date().toISOString().split('T')[0];
+                document.getElementById('voucherExpiry').min = today;
+                
                 voucherForm.addEventListener('submit', function(e) {
                     e.preventDefault();
                     handleCreateVoucher();
@@ -271,14 +317,15 @@
 
         // Tải dữ liệu admin
         function loadAdminData() {
-            console.log('=== LOADING ADMIN DATA ===');
+            console.log('📊 Loading admin data...');
             loadUsersList();
+            loadVouchers();
             updateStats();
         }
 
-        // Tải danh sách user - PHIÊN BẢN MỚI
+        // Tải danh sách user - ĐÃ SỬA HOÀN TOÀN
         function loadUsersList() {
-            console.log('=== LOADING USERS LIST ===');
+            console.log('👥 Loading users list...');
             
             // Đọc trực tiếp từ localStorage
             currentUsers = JSON.parse(localStorage.getItem('users')) || [];
@@ -291,13 +338,13 @@
             
             userList.innerHTML = '';
             
-            console.log('📊 Total users found:', currentUsers.length);
+            console.log('📊 Total users in system:', currentUsers.length);
             console.log('👥 All users:', currentUsers);
             
             // Lọc chỉ user thường (không phải admin)
             const regularUsers = currentUsers.filter(user => !user.isAdmin);
             
-            console.log('👤 Regular users:', regularUsers);
+            console.log('👤 Regular users found:', regularUsers.length);
             
             if (regularUsers.length === 0) {
                 userList.innerHTML = `
@@ -305,8 +352,8 @@
                         <div class="empty-icon">👤</div>
                         <div class="empty-title">Chưa có người dùng thường</div>
                         <div class="empty-description">
-                            Tổng số user trong hệ thống: ${currentUsers.length}<br>
-                            Chỉ có tài khoản admin trong hệ thống
+                            Tổng user trong hệ thống: ${currentUsers.length}<br>
+                            Hiện chỉ có tài khoản admin
                         </div>
                     </div>
                 `;
@@ -334,10 +381,54 @@
             console.log('✅ Users list loaded successfully');
         }
 
+        // Tải danh sách voucher
+        function loadVouchers() {
+            currentVouchers = JSON.parse(localStorage.getItem('vouchers')) || [];
+            const voucherList = document.getElementById('voucherList');
+            
+            if (!voucherList) return;
+            
+            voucherList.innerHTML = '';
+            
+            if (currentVouchers.length === 0) {
+                voucherList.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">🎫</div>
+                        <div class="empty-title">Chưa có voucher nào</div>
+                    </div>
+                `;
+                return;
+            }
+            
+            currentVouchers.forEach((voucher, index) => {
+                const isExpired = new Date(voucher.expiry) < new Date();
+                const voucherItem = document.createElement('div');
+                voucherItem.className = 'voucher-item';
+                voucherItem.style.border = isExpired ? '1px solid var(--error-red)' : '1px solid var(--glass-border)';
+                voucherItem.innerHTML = `
+                    <div class="voucher-code">${voucher.code}</div>
+                    <div class="voucher-info">
+                        <span>Tool: ${voucher.tool}</span>
+                        <span class="voucher-discount">Giảm ${voucher.discount}%</span>
+                    </div>
+                    <div class="voucher-info">
+                        <span>Hết hạn: ${new Date(voucher.expiry).toLocaleDateString('vi-VN')}</span>
+                        <span class="voucher-expires" style="color: ${isExpired ? 'var(--error-red)' : 'var(--success-green)'}">
+                            ${isExpired ? 'Đã hết hạn' : 'Còn hiệu lực'}
+                        </span>
+                    </div>
+                    <div class="voucher-usage">Đã sử dụng: ${voucher.usedCount}/${voucher.maxUses}</div>
+                    <button class="delete-voucher-btn" onclick="deleteVoucher(${index})">Xóa voucher</button>
+                `;
+                voucherList.appendChild(voucherItem);
+            });
+        }
+
         // Cập nhật thống kê
         function updateStats() {
             const users = JSON.parse(localStorage.getItem('users')) || [];
             const tools = JSON.parse(localStorage.getItem('tools')) || {};
+            const vouchers = JSON.parse(localStorage.getItem('vouchers')) || [];
             
             const totalUsers = users.filter(u => !u.isAdmin).length;
             
@@ -349,21 +440,20 @@
             });
             
             const activeTools = Object.values(tools).filter(tool => tool.active && tool.expiry > Date.now()).length;
+            const totalVouchers = vouchers.length;
             
             document.getElementById('totalUsers').textContent = totalUsers;
             document.getElementById('totalRevenue').textContent = formatCurrency(totalRevenue);
             document.getElementById('activeTools').textContent = activeTools;
-            document.getElementById('totalVouchers').textContent = '0';
+            document.getElementById('totalVouchers').textContent = totalVouchers;
         }
 
-        // Xử lý chuyển tiền - PHIÊN BẢN MỚI
+        // Xử lý chuyển tiền - ĐÃ SỬA HOÀN TOÀN
         function handleTransfer() {
-            console.log('=== HANDLING TRANSFER ===');
+            console.log('💸 Processing transfer...');
             
             const username = document.getElementById('transferUsername').value.trim();
             const amountInput = document.getElementById('transferAmount').value.trim();
-            
-            console.log('Transfer details:', { username, amountInput });
             
             if (!username || !amountInput) {
                 showNotification('Vui lòng nhập đầy đủ thông tin!', 'error');
@@ -377,11 +467,9 @@
                 return;
             }
             
-            // Đọc lại dữ liệu mới nhất từ localStorage
+            // Đọc và cập nhật dữ liệu
             let users = JSON.parse(localStorage.getItem('users')) || [];
             const userIndex = users.findIndex(u => u.username === username);
-            
-            console.log('User search result:', { userIndex, users });
             
             if (userIndex === -1) {
                 showNotification('Không tìm thấy người dùng!', 'error');
@@ -395,26 +483,19 @@
                 return;
             }
             
-            console.log('Before transfer - User balance:', user.balance);
-            
             // Cộng tiền cho user
+            const oldBalance = users[userIndex].balance;
             users[userIndex].balance += amount;
             
-            console.log('After transfer - User balance:', users[userIndex].balance);
+            console.log(`💰 Transfer: ${username} | ${oldBalance} + ${amount} = ${users[userIndex].balance}`);
             
-            // LƯU LẠI VÀO LOCALSTORAGE
+            // Lưu vào localStorage
             localStorage.setItem('users', JSON.stringify(users));
-            
-            // KIỂM TRA LẠI
-            const updatedUsers = JSON.parse(localStorage.getItem('users'));
-            console.log('After save - Updated users:', updatedUsers);
             
             showNotification(`✅ Đã chuyển ${formatCurrency(amount)} cho ${username}`);
             
-            // Reset form
+            // Reset form và cập nhật giao diện
             document.getElementById('transferForm').reset();
-            
-            // Cập nhật lại toàn bộ giao diện
             loadAdminData();
             
             // Cập nhật header nếu user đang đăng nhập là user được chuyển tiền
@@ -426,25 +507,20 @@
             }
         }
 
-        // Xử lý ban user - PHIÊN BẢN MỚI
+        // Xử lý ban user - ĐÃ SỬA HOÀN TOÀN
         function handleBanUser() {
-            console.log('=== HANDLING BAN USER ===');
+            console.log('🚫 Processing ban user...');
             
             const username = document.getElementById('banUsername').value.trim();
             const reason = document.getElementById('banReason').value.trim();
-            
-            console.log('Ban details:', { username, reason });
             
             if (!username) {
                 showNotification('Vui lòng nhập tên người dùng!', 'error');
                 return;
             }
             
-            // Đọc lại dữ liệu mới nhất từ localStorage
             let users = JSON.parse(localStorage.getItem('users')) || [];
             const userIndex = users.findIndex(u => u.username === username);
-            
-            console.log('User search result:', { userIndex, users });
             
             if (userIndex === -1) {
                 showNotification('Không tìm thấy người dùng!', 'error');
@@ -462,32 +538,85 @@
                 return;
             }
             
-            console.log('Before ban - Total users:', users.length);
-            
             // Xóa user
             users.splice(userIndex, 1);
-            
-            console.log('After ban - Total users:', users.length);
-            
-            // LƯU LẠI VÀO LOCALSTORAGE
             localStorage.setItem('users', JSON.stringify(users));
             
-            // KIỂM TRA LẠI
-            const updatedUsers = JSON.parse(localStorage.getItem('users'));
-            console.log('After save - Updated users:', updatedUsers);
-            
             showNotification(`✅ Đã ban user ${username}${reason ? ` với lý do: ${reason}` : ''}`);
-            
-            // Reset form
             document.getElementById('banForm').reset();
-            
-            // Cập nhật lại toàn bộ giao diện
             loadAdminData();
         }
 
-        // Xử lý tạo voucher
+        // Xử lý tạo voucher - TÍNH NĂNG MỚI
         function handleCreateVoucher() {
-            showNotification('Tính năng voucher đang được phát triển...');
+            console.log('🎫 Creating voucher...');
+            
+            const tool = document.getElementById('voucherTool').value;
+            const discount = parseInt(document.getElementById('voucherDiscount').value);
+            const expiry = document.getElementById('voucherExpiry').value;
+            const maxUses = parseInt(document.getElementById('voucherMaxUses').value);
+            
+            if (!tool || !discount || !expiry || !maxUses) {
+                showNotification('Vui lòng nhập đầy đủ thông tin!', 'error');
+                return;
+            }
+            
+            if (discount < 1 || discount > 100) {
+                showNotification('Phần trăm giảm giá phải từ 1-100%!', 'error');
+                return;
+            }
+            
+            if (maxUses < 1) {
+                showNotification('Số lượt sử dụng phải lớn hơn 0!', 'error');
+                return;
+            }
+            
+            const expiryDate = new Date(expiry);
+            if (expiryDate < new Date()) {
+                showNotification('Ngày hết hạn phải lớn hơn ngày hiện tại!', 'error');
+                return;
+            }
+            
+            const voucher = {
+                code: generateVoucherCode(),
+                tool: tool,
+                discount: discount,
+                expiry: expiryDate.getTime(),
+                maxUses: maxUses,
+                usedCount: 0,
+                createdAt: Date.now()
+            };
+            
+            let vouchers = JSON.parse(localStorage.getItem('vouchers')) || [];
+            vouchers.push(voucher);
+            localStorage.setItem('vouchers', JSON.stringify(vouchers));
+            
+            showNotification(`✅ Đã tạo voucher: ${voucher.code} - Giảm ${discount}%`);
+            document.getElementById('voucherForm').reset();
+            loadVouchers();
+            updateStats();
+        }
+
+        // Tạo mã voucher
+        function generateVoucherCode() {
+            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            let code = 'LDP-';
+            for (let i = 0; i < 8; i++) {
+                code += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            return code;
+        }
+
+        // Xóa voucher
+        function deleteVoucher(index) {
+            if (confirm('Bạn có chắc muốn xóa voucher này?')) {
+                let vouchers = JSON.parse(localStorage.getItem('vouchers')) || [];
+                vouchers.splice(index, 1);
+                localStorage.setItem('vouchers', JSON.stringify(vouchers));
+                showNotification('✅ Đã xóa voucher');
+                loadVouchers();
+                updateStats();
+            }
         }
 
         // Sửa user
@@ -513,7 +642,7 @@
 
         // Xóa user
         function deleteUser(username) {
-            if (confirm(`Bạn có chắc muốn XÓA user "${username}"? Hành động này không thể hoàn tác!`)) {
+            if (confirm(`Bạn có chắc muốn XÓA user "${username}"?`)) {
                 let users = JSON.parse(localStorage.getItem('users'));
                 const userIndex = users.findIndex(u => u.username === username);
                 
@@ -538,7 +667,6 @@
         function showNotification(message, type = 'success') {
             const notification = document.getElementById('notification');
             if (!notification) {
-                console.error('Notification element not found');
                 alert(message);
                 return;
             }
@@ -552,7 +680,7 @@
             
             setTimeout(() => {
                 notification.classList.remove('show');
-            }, 3000);
+            }, 4000);
         }
 
         // Đăng xuất
@@ -566,10 +694,11 @@
             showNotification('Tính năng đang được phát triển...');
         }
 
+        // =============================================
         // DEBUG FUNCTIONS - XÓA SAU KHI CHẠY ỔN
-        console.log('=== DEBUG ADMIN PANEL ===');
-        console.log('Current user:', JSON.parse(localStorage.getItem('currentUser')));
-        console.log('All users:', JSON.parse(localStorage.getItem('users')));
+        // =============================================
+        
+        console.log('🔧 DEBUG MODE ACTIVATED');
 
         // Hàm debug để xem tất cả users
         function debugUsers() {
@@ -584,29 +713,10 @@
 
         // Hàm reset toàn bộ dữ liệu
         function resetAllData() {
-            if (confirm('Bạn có chắc muốn RESET TOÀN BỘ dữ liệu? Điều này sẽ xóa tất cả user và khởi tạo lại từ đầu.')) {
+            if (confirm('Bạn có chắc muốn RESET TOÀN BỘ dữ liệu?')) {
                 localStorage.clear();
-                
-                // Khởi tạo lại dữ liệu mẫu
-                const users = [
-                    {
-                        username: 'bevis',
-                        password: 'leduc',
-                        balance: 100000000,
-                        isAdmin: true,
-                        createdAt: new Date().toISOString()
-                    }
-                ];
-                localStorage.setItem('users', JSON.stringify(users));
-                
-                const tools = {
-                    'toolv1': { active: false, expiry: null, key: null },
-                    'toolmd5': { active: false, expiry: null, key: null },
-                    'toolsicbo': { active: false, expiry: null, key: null }
-                };
-                localStorage.setItem('tools', JSON.stringify(tools));
-                
-                alert('Đã reset toàn bộ dữ liệu!');
+                initializeData();
+                alert('✅ Đã reset toàn bộ dữ liệu!');
                 window.location.reload();
             }
         }
@@ -625,14 +735,13 @@
             users.push(testUser);
             localStorage.setItem('users', JSON.stringify(users));
             
-            console.log('Added test user:', testUser);
+            console.log('✅ Added test user:', testUser);
             alert(`Đã thêm user test: ${testUser.username}`);
             window.location.reload();
         }
 
         // Thêm nút debug vào giao diện
         document.addEventListener('DOMContentLoaded', function() {
-            // Tạo container cho nút debug
             const debugContainer = document.createElement('div');
             debugContainer.style.position = 'fixed';
             debugContainer.style.top = '10px';
@@ -642,7 +751,6 @@
             debugContainer.style.flexDirection = 'column';
             debugContainer.style.gap = '5px';
             
-            // Nút debug users
             const debugBtn = document.createElement('button');
             debugBtn.textContent = '🐛 Debug Users';
             debugBtn.style.padding = '8px 12px';
@@ -653,7 +761,6 @@
             debugBtn.style.cursor = 'pointer';
             debugBtn.onclick = debugUsers;
             
-            // Nút reset data
             const resetBtn = document.createElement('button');
             resetBtn.textContent = '🔄 Reset Data';
             resetBtn.style.padding = '8px 12px';
@@ -664,7 +771,6 @@
             resetBtn.style.cursor = 'pointer';
             resetBtn.onclick = resetAllData;
             
-            // Nút thêm user test
             const testBtn = document.createElement('button');
             testBtn.textContent = '➕ Test User';
             testBtn.style.padding = '8px 12px';

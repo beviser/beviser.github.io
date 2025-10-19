@@ -9,7 +9,8 @@ function initializeData() {
                 password: 'leduc',
                 balance: 100000000,
                 isAdmin: true,
-                createdAt: new Date().toISOString()
+                createdAt: new Date().toISOString(),
+                initialBalance: 100000000 // Thêm field để theo dõi doanh thu
             }
         ];
         localStorage.setItem('users', JSON.stringify(users));
@@ -74,7 +75,7 @@ function handleRegister(e) {
     }
     
     const users = JSON.parse(localStorage.getItem('users')) || [];
-    console.log('Current users:', users);
+    console.log('Current users before registration:', users);
     
     // Kiểm tra tên đăng nhập đã tồn tại
     if (users.find(u => u.username === username)) {
@@ -88,7 +89,8 @@ function handleRegister(e) {
         password,
         balance: 0,
         isAdmin: false,
-        createdAt: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        initialBalance: 0
     };
     
     users.push(newUser);

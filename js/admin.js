@@ -18,19 +18,28 @@ document.addEventListener('DOMContentLoaded', function() {
     // Xử lý form chuyển tiền
     const transferForm = document.getElementById('transferForm');
     if (transferForm) {
-        transferForm.addEventListener('submit', handleTransfer);
+        transferForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            handleTransfer();
+        });
     }
     
     // Xử lý form ban user
     const banForm = document.getElementById('banForm');
     if (banForm) {
-        banForm.addEventListener('submit', handleBanUser);
+        banForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            handleBanUser();
+        });
     }
     
     // Xử lý form tạo voucher
     const voucherForm = document.getElementById('voucherForm');
     if (voucherForm) {
-        voucherForm.addEventListener('submit', handleCreateVoucher);
+        voucherForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            handleCreateVoucher();
+        });
     }
 });
 
@@ -62,7 +71,7 @@ function loadAdminData() {
     loadVouchers();
 }
 
-// Tải danh sách user - FIXED
+// Tải danh sách user - COMPLETELY FIXED
 function loadUsersList() {
     const users = JSON.parse(localStorage.getItem('users')) || [];
     const userList = document.getElementById('userList');
@@ -75,45 +84,12 @@ function loadUsersList() {
     userList.innerHTML = '';
     
     console.log('Total users in storage:', users.length);
-    console.log('Users data:', users);
+    console.log('All users:', users);
     
-    if (users.length === 0) {
-        userList.innerHTML = `
-            <div class="empty-state">
-                <div class="empty-icon">👤</div>
-                <div class="empty-title">Chưa có người dùng</div>
-            </div>
-        `;
-        return;
-    }
+    // Lọc ra chỉ user thường (không phải admin)
+    const regularUsers = users.filter(user => !user.isAdmin);
     
-    let hasRegularUsers = false;
-    
-    users.forEach(user => {
-        // Hiển thị tất cả user, nhưng đánh dấu admin
-        if (!user.isAdmin) {
-            hasRegularUsers = true;
-        }
-        
-        const userItem = document.createElement('div');
-        userItem.className = 'user-item';
-        userItem.innerHTML = `
-            <div class="user-details">
-                <div class="user-name">${user.username} ${user.isAdmin ? '(Admin)' : ''}</div>
-                <div class="user-balance">${formatCurrency(user.balance)}</div>
-                <div class="user-date">Đăng ký: ${new Date(user.createdAt).toLocaleDateString('vi-VN')}</div>
-            </div>
-            <div class="user-actions">
-                ${!user.isAdmin ? `
-                    <button class="action-btn edit" onclick="editUser('${user.username}')">Sửa</button>
-                    <button class="action-btn delete" onclick="deleteUser('${user.username}')">Xóa</button>
-                ` : '<span style="color: var(--accent-purple);">Quản trị viên</span>'}
-            </div>
-        `;
-        userList.appendChild(userItem);
-    });
-    
-    if (!hasRegularUsers) {
+    if (regularUsers.length === 0) {
         userList.innerHTML = `
             <div class="empty-state">
                 <div class="empty-icon">👤</div>
@@ -121,7 +97,26 @@ function loadUsersList() {
                 <div class="empty-description">Chỉ có tài khoản admin trong hệ thống</div>
             </div>
         `;
+        return;
     }
+    
+    // Hiển thị từng user
+    regularUsers.forEach(user => {
+        const userItem = document.createElement('div');
+        userItem.className = 'user-item';
+        userItem.innerHTML = `
+            <div class="user-details">
+                <div class="user-name">${user.username}</div>
+                <div class="user-balance">${formatCurrency(user.balance)}</div>
+                <div class="user-date">Đăng ký: ${new Date(user.createdAt).toLocaleDateString('vi-VN')}</div>
+            </div>
+            <div class="user-actions">
+                <button class="action-btn edit" onclick="editUser('${user.username}')">Sửa</button>
+                <button class="action-btn delete" onclick="deleteUser('${user.username}')">Xóa</button>
+            </div>
+        `;
+        userList.appendChild(userItem);
+    });
 }
 
 // Cập nhật thống kê - FIXED
@@ -131,78 +126,92 @@ function updateStats() {
     
     const totalUsers = users.filter(u => !u.isAdmin).length;
     
-    // Tính tổng doanh thu từ tất cả user (trừ admin)
+    // Tính tổng doanh thu (giả lập - tổng số dư của tất cả user)
     let totalRevenue = 0;
     users.forEach(user => {
         if (!user.isAdmin) {
-            // Giả sử doanh thu là tổng số tiền đã được nạp (balance hiện tại + đã chi tiêu)
-            // Trong thực tế, bạn cần lưu lịch sử giao dịch để tính chính xác
             totalRevenue += user.balance;
         }
     });
     
     const activeTools = Object.values(tools).filter(tool => tool.active && tool.expiry > Date.now()).length;
+    const vouchers = JSON.parse(localStorage.getItem('vouchers')) || [];
+    const totalVouchers = vouchers.length;
     
     document.getElementById('totalUsers').textContent = totalUsers;
     document.getElementById('totalRevenue').textContent = formatCurrency(totalRevenue);
     document.getElementById('activeTools').textContent = activeTools;
-    document.getElementById('totalVouchers').textContent = '0'; // Có thể thêm tính năng voucher sau
+    document.getElementById('totalVouchers').textContent = totalVouchers;
 }
 
-// Xử lý chuyển tiền - FIXED
-function handleTransfer(e) {
-    e.preventDefault();
+// Xử lý chuyển tiền - COMPLETELY FIXED
+function handleTransfer() {
     console.log('Transfer form submitted');
     
-    const username = document.getElementById('transferUsername').value;
-    const amount = parseInt(document.getElementById('transferAmount').value);
+    const username = document.getElementById('transferUsername').value.trim();
+    const amountInput = document.getElementById('transferAmount').value.trim();
     
-    if (!username || !amount) {
+    if (!username || !amountInput) {
         showNotification('Vui lòng nhập đầy đủ thông tin!', 'error');
         return;
     }
     
-    const users = JSON.parse(localStorage.getItem('users')) || [];
-    const user = users.find(u => u.username === username);
+    const amount = parseInt(amountInput);
     
-    if (!user) {
+    if (isNaN(amount) || amount < 1000) {
+        showNotification('Số tiền tối thiểu là 1,000đ!', 'error');
+        return;
+    }
+    
+    let users = JSON.parse(localStorage.getItem('users')) || [];
+    const userIndex = users.findIndex(u => u.username === username);
+    
+    if (userIndex === -1) {
         showNotification('Không tìm thấy người dùng!', 'error');
         return;
     }
+    
+    const user = users[userIndex];
     
     if (user.isAdmin) {
         showNotification('Không thể chuyển tiền cho tài khoản admin!', 'error');
         return;
     }
     
-    if (amount < 1000) {
-        showNotification('Số tiền tối thiểu là 1,000đ!', 'error');
-        return;
-    }
-    
     // Cộng tiền cho user
-    user.balance += amount;
+    users[userIndex].balance += amount;
     localStorage.setItem('users', JSON.stringify(users));
     
-    showNotification(`Đã chuyển ${formatCurrency(amount)} cho ${username}`);
+    console.log('After transfer - Users:', users);
+    
+    showNotification(`✅ Đã chuyển ${formatCurrency(amount)} cho ${username}`);
+    
+    // Reset form và cập nhật lại giao diện
     document.getElementById('transferForm').reset();
-    loadAdminData(); // Refresh lại dữ liệu
+    loadAdminData();
+    
+    // Cập nhật header nếu user đang đăng nhập là user được chuyển tiền
+    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+    if (currentUser && currentUser.username === username) {
+        currentUser.balance += amount;
+        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+        updateHeaderInfo(currentUser);
+    }
 }
 
-// Xử lý ban user - FIXED
-function handleBanUser(e) {
-    e.preventDefault();
+// Xử lý ban user - COMPLETELY FIXED
+function handleBanUser() {
     console.log('Ban form submitted');
     
-    const username = document.getElementById('banUsername').value;
-    const reason = document.getElementById('banReason').value;
+    const username = document.getElementById('banUsername').value.trim();
+    const reason = document.getElementById('banReason').value.trim();
     
     if (!username) {
         showNotification('Vui lòng nhập tên người dùng!', 'error');
         return;
     }
     
-    const users = JSON.parse(localStorage.getItem('users')) || [];
+    let users = JSON.parse(localStorage.getItem('users')) || [];
     const userIndex = users.findIndex(u => u.username === username);
     
     if (userIndex === -1) {
@@ -217,7 +226,7 @@ function handleBanUser(e) {
         return;
     }
     
-    if (!confirm(`Bạn có chắc muốn ban user ${username}?`)) {
+    if (!confirm(`Bạn có chắc muốn BAN user "${username}"? Hành động này không thể hoàn tác!`)) {
         return;
     }
     
@@ -225,43 +234,97 @@ function handleBanUser(e) {
     users.splice(userIndex, 1);
     localStorage.setItem('users', JSON.stringify(users));
     
-    showNotification(`Đã ban user ${username}${reason ? ` với lý do: ${reason}` : ''}`);
+    console.log('After ban - Users:', users);
+    
+    showNotification(`✅ Đã ban user ${username}${reason ? ` với lý do: ${reason}` : ''}`);
     document.getElementById('banForm').reset();
-    loadAdminData(); // Refresh lại dữ liệu
+    loadAdminData();
 }
 
 // Xử lý tạo voucher
-function handleCreateVoucher(e) {
-    e.preventDefault();
+function handleCreateVoucher() {
     showNotification('Tính năng voucher đang được phát triển...');
 }
 
-// Sửa user
+// Tải danh sách voucher
+function loadVouchers() {
+    const vouchers = JSON.parse(localStorage.getItem('vouchers')) || [];
+    const voucherList = document.getElementById('voucherList');
+    
+    if (!voucherList) return;
+    
+    voucherList.innerHTML = '';
+    
+    if (vouchers.length === 0) {
+        voucherList.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-icon">🎫</div>
+                <div class="empty-title">Chưa có voucher nào</div>
+            </div>
+        `;
+        return;
+    }
+    
+    vouchers.forEach((voucher, index) => {
+        const voucherItem = document.createElement('div');
+        voucherItem.className = 'voucher-item';
+        voucherItem.innerHTML = `
+            <div class="voucher-code">${voucher.code}</div>
+            <div class="voucher-info">
+                <span>Tool: ${voucher.tool}</span>
+                <span class="voucher-discount">Giảm ${voucher.discount}%</span>
+            </div>
+            <div class="voucher-info">
+                <span>Hết hạn: ${new Date(voucher.expiry).toLocaleDateString('vi-VN')}</span>
+                <span class="voucher-expires">${voucher.expiry < Date.now() ? 'Đã hết hạn' : 'Còn hiệu lực'}</span>
+            </div>
+            <div class="voucher-usage">Đã sử dụng: ${voucher.usedCount}/${voucher.maxUses}</div>
+            <button class="delete-voucher-btn" onclick="deleteVoucher(${index})">Xóa voucher</button>
+        `;
+        voucherList.appendChild(voucherItem);
+    });
+}
+
+// Xóa voucher
+function deleteVoucher(index) {
+    const vouchers = JSON.parse(localStorage.getItem('vouchers')) || [];
+    vouchers.splice(index, 1);
+    localStorage.setItem('vouchers', JSON.stringify(vouchers));
+    showNotification('Đã xóa voucher');
+    loadVouchers();
+}
+
+// Sửa user - FIXED
 function editUser(username) {
     const users = JSON.parse(localStorage.getItem('users'));
-    const user = users.find(u => u.username === username);
+    const userIndex = users.findIndex(u => u.username === username);
     
-    if (user) {
-        const newBalance = prompt(`Nhập số tiền mới cho ${username}:`, user.balance);
+    if (userIndex !== -1) {
+        const newBalance = prompt(`Nhập số tiền mới cho ${username}:`, users[userIndex].balance);
         if (newBalance !== null) {
-            user.balance = parseInt(newBalance) || 0;
-            localStorage.setItem('users', JSON.stringify(users));
-            showNotification(`Đã cập nhật số tiền cho ${username}`);
-            loadAdminData();
+            const balance = parseInt(newBalance);
+            if (!isNaN(balance) && balance >= 0) {
+                users[userIndex].balance = balance;
+                localStorage.setItem('users', JSON.stringify(users));
+                showNotification(`✅ Đã cập nhật số tiền cho ${username}`);
+                loadAdminData();
+            } else {
+                showNotification('Số tiền không hợp lệ!', 'error');
+            }
         }
     }
 }
 
-// Xóa user
+// Xóa user - FIXED
 function deleteUser(username) {
-    if (confirm(`Bạn có chắc muốn xóa user ${username}?`)) {
-        const users = JSON.parse(localStorage.getItem('users'));
+    if (confirm(`Bạn có chắc muốn XÓA user "${username}"? Hành động này không thể hoàn tác!`)) {
+        let users = JSON.parse(localStorage.getItem('users'));
         const userIndex = users.findIndex(u => u.username === username);
         
         if (userIndex !== -1) {
             users.splice(userIndex, 1);
             localStorage.setItem('users', JSON.stringify(users));
-            showNotification(`Đã xóa user ${username}`);
+            showNotification(`✅ Đã xóa user ${username}`);
             loadAdminData();
         }
     }
@@ -278,7 +341,11 @@ function formatCurrency(amount) {
 // Hiển thị thông báo
 function showNotification(message, type = 'success') {
     const notification = document.getElementById('notification');
-    if (!notification) return;
+    if (!notification) {
+        console.error('Notification element not found');
+        alert(message); // Fallback
+        return;
+    }
     
     const messageEl = notification.querySelector('.notification-message');
     if (!messageEl) return;

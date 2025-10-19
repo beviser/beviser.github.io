@@ -374,18 +374,30 @@ function buyTool(toolName) {
     const tools = JSON.parse(localStorage.getItem('tools')) || {};
 
     const selectedPrice = selectedPrices[toolName];
-    let totalPrice = selectedPrice.price * quantity;
     const quantityInput = document.getElementById(`${toolName}Quantity`);
     const quantity = quantityInput ? parseInt(quantityInput.value) || 1 : 1;
 
-    // Tính tổng thời gian (đơn vị: giờ)
-    const totalDuration = selectedPrice.duration * quantity;
-    const totalPrice = selectedPrice.price * quantity;
-
-    if (selectedPrice.voucher) {
-        const discount = selectedPrice.voucher.discount;
-        totalPrice = totalPrice - (totalPrice * discount) / 100;
+    // TÍNH TOÁN THỜI GIAN ĐÚNG - SỬA LỖI
+    let totalDurationHours = 0;
+    switch(selectedPrice.duration) {
+        case 1: // 1 giờ
+            totalDurationHours = 1;
+            break;
+        case 3: // 3 giờ
+            totalDurationHours = 3;
+            break;
+        case 24: // 1 ngày
+            totalDurationHours = 24;
+            break;
+        case 168: // 1 tuần
+            totalDurationHours = 168; // 7 ngày * 24 giờ
+            break;
+        default:
+            totalDurationHours = selectedPrice.duration;
     }
+
+    const totalPrice = selectedPrice.price * quantity;
+    const totalTime = totalDurationHours * 60 * 60 * 1000; // Chuyển đổi sang milliseconds
 
     if (currentUser.balance < totalPrice) {
         showNotification('Số dư không đủ! Vui lòng nạp thêm tiền.', 'error');
@@ -398,9 +410,9 @@ function buyTool(toolName) {
     // Trừ tiền
     currentUser.balance -= totalPrice;
 
-    // Tạo key và thời gian hết hạn (chuyển đổi giờ sang milliseconds)
+    // Tạo key và thời gian hết hạn
     const key = generateKey();
-    const expiry = Date.now() + (totalDuration * 60 * 60 * 1000); // totalDuration tính bằng giờ
+    const expiry = Date.now() + totalTime;
 
     // Cập nhật tool
     tools[toolName] = {
@@ -413,10 +425,6 @@ function buyTool(toolName) {
     const userIndex = users.findIndex(u => u.username === currentUser.username);
     users[userIndex] = currentUser;
 
-    localStorage.setItem('currentUser', JSON.stringify(currentUser));
-    localStorage.setItem('users', JSON.stringify(users));
-    localStorage.setItem('tools', JSON.stringify(tools));
-
     // Lưu lịch sử mua hàng
     const purchaseHistory = JSON.parse(localStorage.getItem('purchaseHistory')) || [];
     purchaseHistory.push({
@@ -424,22 +432,39 @@ function buyTool(toolName) {
         username: currentUser.username,
         key: key,
         price: totalPrice,
-        duration: totalDuration,
+        duration: totalDurationHours,
         expiry: expiry,
-        purchaseDate: new Date().toISOString()
+        purchaseDate: Date.now(),
+        durationType: selectedPrice.duration === 1 ? '1 giờ' : 
+                     selectedPrice.duration === 3 ? '3 giờ' :
+                     selectedPrice.duration === 24 ? '1 ngày' : '1 tuần'
     });
+    
     localStorage.setItem('purchaseHistory', JSON.stringify(purchaseHistory));
+    localStorage.setItem('currentUser', JSON.stringify(currentUser));
+    localStorage.setItem('users', JSON.stringify(users));
+    localStorage.setItem('tools', JSON.stringify(tools));
 
     // Hiển thị key trong modal
     document.getElementById('generatedKey').textContent = key;
     showModal('keyModal');
 
-    showNotification(`Mua thành công! Key: ${key}`);
+    showNotification(`Mua thành công! Thời gian: ${getDurationText(selectedPrice.duration)}`);
 
     // Reload để cập nhật trạng thái
     setTimeout(() => {
         window.location.reload();
     }, 2000);
+}
+
+function getDurationText(duration) {
+    switch(duration) {
+        case 1: return '1 giờ';
+        case 3: return '3 giờ';
+        case 24: return '1 ngày';
+        case 168: return '1 tuần';
+        default: return `${duration} giờ`;
+    }
 }
 
 // Tạo key ngẫu nhiên
@@ -802,6 +827,7 @@ function applyVoucher() {
     showNotification('Mã giảm giá không hợp lệ hoặc đã hết hạn!', 'error');
 
 }
+
 
 
 

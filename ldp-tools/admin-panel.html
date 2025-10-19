@@ -237,5 +237,43 @@
     </div>
 
     <script src="js/admin.js"></script>
+    <script>
+// Debug script for admin panel
+console.log('=== ADMIN PANEL DEBUG ===');
+console.log('Current users in localStorage:', JSON.parse(localStorage.getItem('users')));
+console.log('Current user:', JSON.parse(localStorage.getItem('currentUser')));
+
+// Test function to add sample users
+function addTestUsers() {
+    const users = JSON.parse(localStorage.getItem('users')) || [];
+    
+    const testUsers = [
+        { username: 'user1', password: 'pass1', balance: 50000, isAdmin: false, createdAt: new Date().toISOString() },
+        { username: 'user2', password: 'pass2', balance: 100000, isAdmin: false, createdAt: new Date().toISOString() },
+        { username: 'user3', password: 'pass3', balance: 0, isAdmin: false, createdAt: new Date().toISOString() }
+    ];
+    
+    testUsers.forEach(testUser => {
+        if (!users.find(u => u.username === testUser.username)) {
+            users.push(testUser);
+        }
+    });
+    
+    localStorage.setItem('users', JSON.stringify(users));
+    console.log('Test users added:', testUsers);
+    alert('Đã thêm 3 user test: user1, user2, user3');
+    window.location.reload();
+}
+
+// Test function to clear all users (except admin)
+function clearTestUsers() {
+    let users = JSON.parse(localStorage.getItem('users')) || [];
+    users = users.filter(user => user.isAdmin); // Giữ lại admin
+    localStorage.setItem('users', JSON.stringify(users));
+    console.log('Cleared all non-admin users');
+    alert('Đã xóa tất cả user thường');
+    window.location.reload();
+}
+</script>
 </body>
 </html>

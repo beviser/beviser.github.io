@@ -13,6 +13,7 @@ function initializeData() {
             }
         ];
         localStorage.setItem('users', JSON.stringify(users));
+        console.log('Initialized default admin user');
     }
     
     if (!localStorage.getItem('tools')) {
@@ -32,6 +33,7 @@ function showNotification(message, type = 'success') {
     
     if (!notification || !messageEl) {
         console.error('Không tìm thấy element notification');
+        alert(message); // Fallback
         return;
     }
     
@@ -47,6 +49,7 @@ function showNotification(message, type = 'success') {
 // Xử lý đăng ký
 function handleRegister(e) {
     e.preventDefault();
+    console.log('Register form submitted');
     
     const username = document.getElementById('regUsername').value;
     const password = document.getElementById('regPassword').value;
@@ -71,6 +74,7 @@ function handleRegister(e) {
     }
     
     const users = JSON.parse(localStorage.getItem('users')) || [];
+    console.log('Current users:', users);
     
     // Kiểm tra tên đăng nhập đã tồn tại
     if (users.find(u => u.username === username)) {
@@ -90,6 +94,9 @@ function handleRegister(e) {
     users.push(newUser);
     localStorage.setItem('users', JSON.stringify(users));
     
+    console.log('New user registered:', newUser);
+    console.log('All users after registration:', users);
+    
     showNotification('Đăng ký thành công! Đang chuyển hướng...');
     
     setTimeout(() => {
@@ -100,6 +107,7 @@ function handleRegister(e) {
 // Xử lý đăng nhập
 function handleLogin(e) {
     e.preventDefault();
+    console.log('Login form submitted');
     
     const username = document.getElementById('username').value;
     const password = document.getElementById('password').value;
@@ -110,6 +118,7 @@ function handleLogin(e) {
     if (user) {
         // Lưu thông tin người dùng hiện tại
         localStorage.setItem('currentUser', JSON.stringify(user));
+        console.log('User logged in:', user);
         showNotification('Đăng nhập thành công!');
         
         setTimeout(() => {
@@ -143,12 +152,6 @@ document.addEventListener('DOMContentLoaded', function() {
         loginForm.addEventListener('submit', handleLogin);
     } else {
         console.log('Login form not found');
-    }
-    
-    // Kiểm tra nếu đã đăng nhập thì chuyển hướng
-    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-    if (currentUser && window.location.pathname.includes('index.html')) {
-        window.location.href = 'home.html';
     }
 });
 

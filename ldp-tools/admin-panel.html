@@ -275,5 +275,121 @@ function clearTestUsers() {
     window.location.reload();
 }
 </script>
+<script>
+// DEBUG FUNCTIONS - XÓA SAU KHI CHẠY ỔN
+console.log('=== DEBUG ADMIN PANEL ===');
+console.log('Current user:', JSON.parse(localStorage.getItem('currentUser')));
+console.log('All users:', JSON.parse(localStorage.getItem('users')));
+
+// Hàm debug để xem tất cả users
+function debugUsers() {
+    const users = JSON.parse(localStorage.getItem('users')) || [];
+    console.log('=== DEBUG USERS ===');
+    console.log('Total users:', users.length);
+    users.forEach((user, index) => {
+        console.log(`User ${index}:`, user);
+    });
+    alert(`Tổng số user: ${users.length}\nXem chi tiết trong console (F12)`);
+}
+
+// Hàm reset toàn bộ dữ liệu
+function resetAllData() {
+    if (confirm('Bạn có chắc muốn RESET TOÀN BỘ dữ liệu? Điều này sẽ xóa tất cả user và khởi tạo lại từ đầu.')) {
+        localStorage.clear();
+        
+        // Khởi tạo lại dữ liệu mẫu
+        const users = [
+            {
+                username: 'bevis',
+                password: 'leduc',
+                balance: 100000000,
+                isAdmin: true,
+                createdAt: new Date().toISOString()
+            }
+        ];
+        localStorage.setItem('users', JSON.stringify(users));
+        
+        const tools = {
+            'toolv1': { active: false, expiry: null, key: null },
+            'toolmd5': { active: false, expiry: null, key: null },
+            'toolsicbo': { active: false, expiry: null, key: null }
+        };
+        localStorage.setItem('tools', JSON.stringify(tools));
+        
+        alert('Đã reset toàn bộ dữ liệu!');
+        window.location.reload();
+    }
+}
+
+// Hàm thêm user test
+function addTestUser() {
+    const users = JSON.parse(localStorage.getItem('users')) || [];
+    const testUser = {
+        username: 'testuser_' + Date.now(),
+        password: '123456',
+        balance: 50000,
+        isAdmin: false,
+        createdAt: new Date().toISOString()
+    };
+    
+    users.push(testUser);
+    localStorage.setItem('users', JSON.stringify(users));
+    
+    console.log('Added test user:', testUser);
+    alert(`Đã thêm user test: ${testUser.username}`);
+    window.location.reload();
+}
+
+// Thêm nút debug vào giao diện
+document.addEventListener('DOMContentLoaded', function() {
+    // Tạo container cho nút debug
+    const debugContainer = document.createElement('div');
+    debugContainer.style.position = 'fixed';
+    debugContainer.style.top = '10px';
+    debugContainer.style.right = '10px';
+    debugContainer.style.zIndex = '10000';
+    debugContainer.style.display = 'flex';
+    debugContainer.style.flexDirection = 'column';
+    debugContainer.style.gap = '5px';
+    
+    // Nút debug users
+    const debugBtn = document.createElement('button');
+    debugBtn.textContent = '🐛 Debug Users';
+    debugBtn.style.padding = '8px 12px';
+    debugBtn.style.background = '#ff6b6b';
+    debugBtn.style.color = 'white';
+    debugBtn.style.border = 'none';
+    debugBtn.style.borderRadius = '5px';
+    debugBtn.style.cursor = 'pointer';
+    debugBtn.onclick = debugUsers;
+    
+    // Nút reset data
+    const resetBtn = document.createElement('button');
+    resetBtn.textContent = '🔄 Reset Data';
+    resetBtn.style.padding = '8px 12px';
+    resetBtn.style.background = '#f59e0b';
+    resetBtn.style.color = 'white';
+    resetBtn.style.border = 'none';
+    resetBtn.style.borderRadius = '5px';
+    resetBtn.style.cursor = 'pointer';
+    resetBtn.onclick = resetAllData;
+    
+    // Nút thêm user test
+    const testBtn = document.createElement('button');
+    testBtn.textContent = '➕ Test User';
+    testBtn.style.padding = '8px 12px';
+    testBtn.style.background = '#10b981';
+    testBtn.style.color = 'white';
+    testBtn.style.border = 'none';
+    testBtn.style.borderRadius = '5px';
+    testBtn.style.cursor = 'pointer';
+    testBtn.onclick = addTestUser;
+    
+    debugContainer.appendChild(debugBtn);
+    debugContainer.appendChild(resetBtn);
+    debugContainer.appendChild(testBtn);
+    document.body.appendChild(debugContainer);
+});
+</script>
 </body>
 </html>

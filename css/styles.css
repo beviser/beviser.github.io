@@ -2062,29 +2062,64 @@ textarea:focus {
 .chat-messages.default .message {
     max-width: 70%;
     padding: 15px 20px;
-    border-radius: 15px;
+    margin-bottom: 15px;
 }
 
 .chat-messages.compact .message {
     max-width: 85%;
     padding: 10px 15px;
-    border-radius: 10px;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
+    font-size: 0.9em;
+}
+
+.chat-messages.compact .message-time {
+    font-size: 0.7em;
 }
 
 .chat-messages.spacious .message {
     max-width: 60%;
     padding: 20px 25px;
-    border-radius: 20px;
     margin-bottom: 20px;
-}
-
-.chat-messages.compact .message-time {
-    font-size: 0.7rem;
+    border-radius: 20px;
 }
 
 .chat-messages.spacious .message-time {
-    font-size: 0.9rem;
+    font-size: 0.9em;
+    margin-top: 8px;
+}
+
+/* Chat container customization */
+.chat-container.compact {
+    height: calc(100vh - 120px);
+}
+
+.chat-container.spacious {
+    height: calc(100vh - 180px);
+}
+
+.chat-container.compact .chat-messages {
+    padding: 15px;
+}
+
+.chat-container.spacious .chat-messages {
+    padding: 30px;
+}
+
+/* Font size variations */
+body[data-font-size="large"] {
+    font-size: 16px;
+}
+
+body[data-font-size="large"] .chat-messages .message {
+    font-size: 1.1em;
+}
+
+body[data-font-size="xlarge"] {
+    font-size: 18px;
+}
+
+body[data-font-size="xlarge"] .chat-messages .message {
+    font-size: 1.2em;
 }
 
 .mouse-trail {
@@ -2108,3 +2143,4 @@ textarea:focus {
         transform: scale(0);
     }
 }
+

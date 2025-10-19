@@ -259,7 +259,10 @@ function showHistory() {
 
 // Tùy chỉnh chat
 function customizeChat() {
-    showNotification('Tính năng đang được phát triển...');
+    const modal = document.getElementById('customizeModal');
+    if (modal) {
+        modal.classList.add('show');
+    }
 }
 
 function resetChat() {
@@ -296,4 +299,5 @@ function getColorValue(color) {
         orange: '#F59E0B'
     };
     return colors[color] || colors.purple;
+
 }

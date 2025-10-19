@@ -1,46 +1,26 @@
-// admin.js - Xử lý admin panel
+// admin.js - Xử lý admin panel (HOÀN TOÀN MỚI)
+
+// Biến toàn cục để theo dõi dữ liệu
+let currentUsers = [];
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('Admin panel loaded');
+    console.log('=== ADMIN PANEL INIT ===');
     
     const currentUser = JSON.parse(localStorage.getItem('currentUser'));
     
     // Kiểm tra quyền admin
     if (!currentUser || !currentUser.isAdmin) {
+        alert('Bạn không có quyền truy cập admin panel!');
         window.location.href = 'index.html';
         return;
     }
     
+    console.log('Admin user:', currentUser);
+    
     updateHeaderInfo(currentUser);
     initSidebar();
     loadAdminData();
-    
-    // Xử lý form chuyển tiền
-    const transferForm = document.getElementById('transferForm');
-    if (transferForm) {
-        transferForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            handleTransfer();
-        });
-    }
-    
-    // Xử lý form ban user
-    const banForm = document.getElementById('banForm');
-    if (banForm) {
-        banForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            handleBanUser();
-        });
-    }
-    
-    // Xử lý form tạo voucher
-    const voucherForm = document.getElementById('voucherForm');
-    if (voucherForm) {
-        voucherForm.addEventListener('submit', function(e) {
-            e.preventDefault();
-            handleCreateVoucher();
-        });
-    }
+    setupEventListeners();
 });
 
 // Cập nhật thông tin header
@@ -64,37 +44,75 @@ function initSidebar() {
     }
 }
 
-// Tải dữ liệu admin
-function loadAdminData() {
-    loadUsersList();
-    updateStats();
-    loadVouchers();
+// Thiết lập event listeners
+function setupEventListeners() {
+    // Form chuyển tiền
+    const transferForm = document.getElementById('transferForm');
+    if (transferForm) {
+        transferForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            handleTransfer();
+        });
+    }
+    
+    // Form ban user
+    const banForm = document.getElementById('banForm');
+    if (banForm) {
+        banForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            handleBanUser();
+        });
+    }
+    
+    // Form tạo voucher
+    const voucherForm = document.getElementById('voucherForm');
+    if (voucherForm) {
+        voucherForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            handleCreateVoucher();
+        });
+    }
 }
 
-// Tải danh sách user - COMPLETELY FIXED
+// Tải dữ liệu admin
+function loadAdminData() {
+    console.log('=== LOADING ADMIN DATA ===');
+    loadUsersList();
+    updateStats();
+}
+
+// Tải danh sách user - PHIÊN BẢN MỚI
 function loadUsersList() {
-    const users = JSON.parse(localStorage.getItem('users')) || [];
+    console.log('=== LOADING USERS LIST ===');
+    
+    // Đọc trực tiếp từ localStorage
+    currentUsers = JSON.parse(localStorage.getItem('users')) || [];
     const userList = document.getElementById('userList');
     
     if (!userList) {
-        console.error('User list element not found');
+        console.error('❌ User list element not found!');
         return;
     }
     
     userList.innerHTML = '';
     
-    console.log('Total users in storage:', users.length);
-    console.log('All users:', users);
+    console.log('📊 Total users found:', currentUsers.length);
+    console.log('👥 All users:', currentUsers);
     
-    // Lọc ra chỉ user thường (không phải admin)
-    const regularUsers = users.filter(user => !user.isAdmin);
+    // Lọc chỉ user thường (không phải admin)
+    const regularUsers = currentUsers.filter(user => !user.isAdmin);
+    
+    console.log('👤 Regular users:', regularUsers);
     
     if (regularUsers.length === 0) {
         userList.innerHTML = `
             <div class="empty-state">
                 <div class="empty-icon">👤</div>
                 <div class="empty-title">Chưa có người dùng thường</div>
-                <div class="empty-description">Chỉ có tài khoản admin trong hệ thống</div>
+                <div class="empty-description">
+                    Tổng số user trong hệ thống: ${currentUsers.length}<br>
+                    Chỉ có tài khoản admin trong hệ thống
+                </div>
             </div>
         `;
         return;
@@ -117,16 +135,17 @@ function loadUsersList() {
         `;
         userList.appendChild(userItem);
     });
+    
+    console.log('✅ Users list loaded successfully');
 }
 
-// Cập nhật thống kê - FIXED
+// Cập nhật thống kê
 function updateStats() {
     const users = JSON.parse(localStorage.getItem('users')) || [];
     const tools = JSON.parse(localStorage.getItem('tools')) || {};
     
     const totalUsers = users.filter(u => !u.isAdmin).length;
     
-    // Tính tổng doanh thu (giả lập - tổng số dư của tất cả user)
     let totalRevenue = 0;
     users.forEach(user => {
         if (!user.isAdmin) {
@@ -135,21 +154,21 @@ function updateStats() {
     });
     
     const activeTools = Object.values(tools).filter(tool => tool.active && tool.expiry > Date.now()).length;
-    const vouchers = JSON.parse(localStorage.getItem('vouchers')) || [];
-    const totalVouchers = vouchers.length;
     
     document.getElementById('totalUsers').textContent = totalUsers;
     document.getElementById('totalRevenue').textContent = formatCurrency(totalRevenue);
     document.getElementById('activeTools').textContent = activeTools;
-    document.getElementById('totalVouchers').textContent = totalVouchers;
+    document.getElementById('totalVouchers').textContent = '0';
 }
 
-// Xử lý chuyển tiền - COMPLETELY FIXED
+// Xử lý chuyển tiền - PHIÊN BẢN MỚI
 function handleTransfer() {
-    console.log('Transfer form submitted');
+    console.log('=== HANDLING TRANSFER ===');
     
     const username = document.getElementById('transferUsername').value.trim();
     const amountInput = document.getElementById('transferAmount').value.trim();
+    
+    console.log('Transfer details:', { username, amountInput });
     
     if (!username || !amountInput) {
         showNotification('Vui lòng nhập đầy đủ thông tin!', 'error');
@@ -163,8 +182,11 @@ function handleTransfer() {
         return;
     }
     
+    // Đọc lại dữ liệu mới nhất từ localStorage
     let users = JSON.parse(localStorage.getItem('users')) || [];
     const userIndex = users.findIndex(u => u.username === username);
+    
+    console.log('User search result:', { userIndex, users });
     
     if (userIndex === -1) {
         showNotification('Không tìm thấy người dùng!', 'error');
@@ -178,16 +200,26 @@ function handleTransfer() {
         return;
     }
     
+    console.log('Before transfer - User balance:', user.balance);
+    
     // Cộng tiền cho user
     users[userIndex].balance += amount;
+    
+    console.log('After transfer - User balance:', users[userIndex].balance);
+    
+    // LƯU LẠI VÀO LOCALSTORAGE
     localStorage.setItem('users', JSON.stringify(users));
     
-    console.log('After transfer - Users:', users);
+    // KIỂM TRA LẠI
+    const updatedUsers = JSON.parse(localStorage.getItem('users'));
+    console.log('After save - Updated users:', updatedUsers);
     
     showNotification(`✅ Đã chuyển ${formatCurrency(amount)} cho ${username}`);
     
-    // Reset form và cập nhật lại giao diện
+    // Reset form
     document.getElementById('transferForm').reset();
+    
+    // Cập nhật lại toàn bộ giao diện
     loadAdminData();
     
     // Cập nhật header nếu user đang đăng nhập là user được chuyển tiền
@@ -199,20 +231,25 @@ function handleTransfer() {
     }
 }
 
-// Xử lý ban user - COMPLETELY FIXED
+// Xử lý ban user - PHIÊN BẢN MỚI
 function handleBanUser() {
-    console.log('Ban form submitted');
+    console.log('=== HANDLING BAN USER ===');
     
     const username = document.getElementById('banUsername').value.trim();
     const reason = document.getElementById('banReason').value.trim();
+    
+    console.log('Ban details:', { username, reason });
     
     if (!username) {
         showNotification('Vui lòng nhập tên người dùng!', 'error');
         return;
     }
     
+    // Đọc lại dữ liệu mới nhất từ localStorage
     let users = JSON.parse(localStorage.getItem('users')) || [];
     const userIndex = users.findIndex(u => u.username === username);
+    
+    console.log('User search result:', { userIndex, users });
     
     if (userIndex === -1) {
         showNotification('Không tìm thấy người dùng!', 'error');
@@ -230,14 +267,26 @@ function handleBanUser() {
         return;
     }
     
+    console.log('Before ban - Total users:', users.length);
+    
     // Xóa user
     users.splice(userIndex, 1);
+    
+    console.log('After ban - Total users:', users.length);
+    
+    // LƯU LẠI VÀO LOCALSTORAGE
     localStorage.setItem('users', JSON.stringify(users));
     
-    console.log('After ban - Users:', users);
+    // KIỂM TRA LẠI
+    const updatedUsers = JSON.parse(localStorage.getItem('users'));
+    console.log('After save - Updated users:', updatedUsers);
     
     showNotification(`✅ Đã ban user ${username}${reason ? ` với lý do: ${reason}` : ''}`);
+    
+    // Reset form
     document.getElementById('banForm').reset();
+    
+    // Cập nhật lại toàn bộ giao diện
     loadAdminData();
 }
 
@@ -246,55 +295,7 @@ function handleCreateVoucher() {
     showNotification('Tính năng voucher đang được phát triển...');
 }
 
-// Tải danh sách voucher
-function loadVouchers() {
-    const vouchers = JSON.parse(localStorage.getItem('vouchers')) || [];
-    const voucherList = document.getElementById('voucherList');
-    
-    if (!voucherList) return;
-    
-    voucherList.innerHTML = '';
-    
-    if (vouchers.length === 0) {
-        voucherList.innerHTML = `
-            <div class="empty-state">
-                <div class="empty-icon">🎫</div>
-                <div class="empty-title">Chưa có voucher nào</div>
-            </div>
-        `;
-        return;
-    }
-    
-    vouchers.forEach((voucher, index) => {
-        const voucherItem = document.createElement('div');
-        voucherItem.className = 'voucher-item';
-        voucherItem.innerHTML = `
-            <div class="voucher-code">${voucher.code}</div>
-            <div class="voucher-info">
-                <span>Tool: ${voucher.tool}</span>
-                <span class="voucher-discount">Giảm ${voucher.discount}%</span>
-            </div>
-            <div class="voucher-info">
-                <span>Hết hạn: ${new Date(voucher.expiry).toLocaleDateString('vi-VN')}</span>
-                <span class="voucher-expires">${voucher.expiry < Date.now() ? 'Đã hết hạn' : 'Còn hiệu lực'}</span>
-            </div>
-            <div class="voucher-usage">Đã sử dụng: ${voucher.usedCount}/${voucher.maxUses}</div>
-            <button class="delete-voucher-btn" onclick="deleteVoucher(${index})">Xóa voucher</button>
-        `;
-        voucherList.appendChild(voucherItem);
-    });
-}
-
-// Xóa voucher
-function deleteVoucher(index) {
-    const vouchers = JSON.parse(localStorage.getItem('vouchers')) || [];
-    vouchers.splice(index, 1);
-    localStorage.setItem('vouchers', JSON.stringify(vouchers));
-    showNotification('Đã xóa voucher');
-    loadVouchers();
-}
-
-// Sửa user - FIXED
+// Sửa user
 function editUser(username) {
     const users = JSON.parse(localStorage.getItem('users'));
     const userIndex = users.findIndex(u => u.username === username);
@@ -315,7 +316,7 @@ function editUser(username) {
     }
 }
 
-// Xóa user - FIXED
+// Xóa user
 function deleteUser(username) {
     if (confirm(`Bạn có chắc muốn XÓA user "${username}"? Hành động này không thể hoàn tác!`)) {
         let users = JSON.parse(localStorage.getItem('users'));
@@ -343,7 +344,7 @@ function showNotification(message, type = 'success') {
     const notification = document.getElementById('notification');
     if (!notification) {
         console.error('Notification element not found');
-        alert(message); // Fallback
+        alert(message);
         return;
     }
     

@@ -296,11 +296,21 @@ function closeModal(modalId) {
 function applyCustomize() {
     const themeColor = document.getElementById('themeColor').value;
     const chatStyle = document.getElementById('chatStyle').value;
-    
-    // Áp dụng tùy chỉnh
+
+    // Áp dụng màu chủ đạo
     document.documentElement.style.setProperty('--primary-purple', getColorValue(themeColor));
-    document.body.setAttribute('data-chat-style', chatStyle);
-    
+
+    // Áp dụng kiểu chat
+    const chatMessages = document.getElementById('chatMessages');
+    chatMessages.className = 'chat-messages ' + chatStyle;
+
+    // Lưu cài đặt
+    const settings = {
+        themeColor: themeColor,
+        chatStyle: chatStyle
+    };
+    localStorage.setItem('chatSettings', JSON.stringify(settings));
+
     showNotification('Đã áp dụng tùy chỉnh!');
     closeModal('customizeModal');
 }
@@ -314,5 +324,5 @@ function getColorValue(color) {
         orange: '#F59E0B'
     };
     return colors[color] || colors.purple;
-
 }
+

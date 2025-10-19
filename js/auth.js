@@ -9,8 +9,7 @@ function initializeData() {
                 password: 'leduc',
                 balance: 100000000,
                 isAdmin: true,
-                createdAt: new Date().toISOString(),
-                initialBalance: 100000000 // Thêm field để theo dõi doanh thu
+                createdAt: new Date().toISOString()
             }
         ];
         localStorage.setItem('users', JSON.stringify(users));
@@ -52,7 +51,7 @@ function handleRegister(e) {
     e.preventDefault();
     console.log('Register form submitted');
     
-    const username = document.getElementById('regUsername').value;
+    const username = document.getElementById('regUsername').value.trim();
     const password = document.getElementById('regPassword').value;
     const confirmPassword = document.getElementById('confirmPassword').value;
     
@@ -74,7 +73,7 @@ function handleRegister(e) {
         return;
     }
     
-    const users = JSON.parse(localStorage.getItem('users')) || [];
+    let users = JSON.parse(localStorage.getItem('users')) || [];
     console.log('Current users before registration:', users);
     
     // Kiểm tra tên đăng nhập đã tồn tại
@@ -85,12 +84,11 @@ function handleRegister(e) {
     
     // Thêm người dùng mới
     const newUser = {
-        username,
-        password,
+        username: username,
+        password: password,
         balance: 0,
         isAdmin: false,
-        createdAt: new Date().toISOString(),
-        initialBalance: 0
+        createdAt: new Date().toISOString()
     };
     
     users.push(newUser);
@@ -111,7 +109,7 @@ function handleLogin(e) {
     e.preventDefault();
     console.log('Login form submitted');
     
-    const username = document.getElementById('username').value;
+    const username = document.getElementById('username').value.trim();
     const password = document.getElementById('password').value;
     
     const users = JSON.parse(localStorage.getItem('users')) || [];

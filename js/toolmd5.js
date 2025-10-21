@@ -316,7 +316,7 @@ function applyChatCustomization(settings) {
     document.body.style.fontSize = getFontSize(settings.fontSize);
 }
 
-unction getColorValue(color) {
+function getColorValue(color) {
     const colors = {
         purple: '#6B46C1',
         blue: '#3B82F6',
@@ -341,4 +341,5 @@ document.addEventListener('DOMContentLoaded', function() {
         applyChatCustomization(savedSettings);
     }
 });
+
 

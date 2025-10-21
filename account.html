@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LDP TOOLS - Tài Khoản</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <!-- Animated Background -->
+    <div class="animated-bg">
+        <div class="light-beam"></div>
+        <div class="light-beam"></div>
+        <div class="light-beam"></div>
+    </div>
+
+    <!-- Header -->
+    <header class="main-header">
+        <div class="menu-icon" id="menuIcon">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+        <a href="home.html" class="logo">LDP TOOLS</a>
+        <div class="user-info">
+            <span class="username" id="headerUsername">Username</span>
+            <div class="balance-box" id="headerBalance">0đ</div>
+        </div>
+    </header>
+
+    <!-- Sidebar -->
+    <nav class="sidebar" id="sidebar">
+        <ul>
+            <li onclick="window.location.href='home.html'">
+                <i>🏠</i> Trang chủ
+            </li>
+            <li onclick="window.location.href='account.html'" class="active">
+                <i>👤</i> Kiểm tra tài khoản
+            </li>
+            <li onclick="window.location.href='deposit.html'">
+                <i>💰</i> Nạp tiền
+            </li>
+            <li onclick="window.location.href='history.html'">
+                <i>📜</i> Lịch sử mua
+            </li>
+            <li id="adminPanelLink" class="hidden" onclick="window.location.href='admin-panel.html'">
+                <i>⚙️</i> Control Panel
+            </li>
+            <li onclick="logout()">
+                <i>🚪</i> Đăng xuất
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="account-container">
+            <div class="account-header">
+                <h1 class="account-title">THÔNG TIN TÀI KHOẢN</h1>
+                <p class="account-subtitle">Quản lý thông tin cá nhân và số dư</p>
+            </div>
+
+            <div class="account-grid">
+                <!-- Thông tin tài khoản -->
+                <div class="account-card">
+                    <div class="card-header">
+                        <div class="card-icon">👤</div>
+                        <h3 class="card-title">Thông Tin Cá Nhân</h3>
+                    </div>
+                    <div class="account-info">
+                        <div class="info-item">
+                            <span class="info-label">Tên đăng nhập:</span>
+                            <span class="info-value" id="infoUsername">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Loại tài khoản:</span>
+                            <span class="info-value" id="infoType">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Ngày đăng ký:</span>
+                            <span class="info-value" id="infoCreatedAt">-</span>
+                        </div>
+                        <div class="info-item">
+                            <span class="info-label">Trạng thái:</span>
+                            <span class="status-badge active" id="infoStatus">-</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Số dư và thống kê -->
+                <div class="account-card">
+                    <div class="card-header">
+                        <div class="card-icon">💰</div>
+                        <h3 class="card-title">Số Dư & Thống Kê</h3>
+                    </div>
+                    <div class="balance-section">
+                        <div class="balance-amount" id="balanceAmount">0đ</div>
+                        <div class="balance-label">Số dư hiện tại</div>
+                    </div>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="stat-value" id="totalSpent">0đ</div>
+                            <div class="stat-label">Tổng chi tiêu</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="toolsBought">0</div>
+                            <div class="stat-label">Tool đã mua</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="activeTools">0</div>
+                            <div class="stat-label">Tool đang hoạt động</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tools đang hoạt động -->
+                <div class="account-card">
+                    <div class="card-header">
+                        <div class="card-icon">⚡</div>
+                        <h3 class="card-title">Tools Đang Hoạt Động</h3>
+                    </div>
+                    <div class="active-tools" id="activeToolsList">
+                        <!-- Active tools will be loaded here -->
+                    </div>
+                </div>
+
+                <!-- Lịch sử giao dịch gần đây -->
+                <div class="account-card">
+                    <div class="card-header">
+                        <div class="card-icon">📊</div>
+                        <h3 class="card-title">Giao Dịch Gần Đây</h3>
+                    </div>
+                    <div class="recent-transactions" id="recentTransactions">
+                        <!-- Recent transactions will be loaded here -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="action-buttons">
+                <button class="btn primary" onclick="window.location.href='deposit.html'">
+                    💰 Nạp thêm tiền
+                </button>
+                <button class="btn secondary" onclick="window.location.href='history.html'">
+                    📜 Xem lịch sử đầy đủ
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Notification -->
+    <div id="notification" class="notification">
+        <div class="notification-icon">✓</div>
+        <div class="notification-content">
+            <div class="notification-title">Thông báo</div>
+            <div class="notification-message">Message here</div>
+        </div>
+    </div>
+
+    <script src="js/account.js"></script>
+    <script>
+    // Mouse trail effect
+    document.addEventListener('mousemove', function(e) {
+        const trail = document.createElement('div');
+        trail.className = 'mouse-trail';
+        trail.style.left = e.pageX - 3 + 'px';
+        trail.style.top = e.pageY - 3 + 'px';
+        document.body.appendChild(trail);
+
+        setTimeout(() => {
+            trail.remove();
+        }, 600);
+    });
+    </script>
+</body>
+</html>

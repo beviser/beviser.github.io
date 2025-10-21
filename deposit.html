@@ -1,143 +1,99 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LDP TOOLS - Nạp Tiền</title>
-    <link rel="stylesheet" href="css/styles.css">
-</head>
-<body>
-    <!-- Animated Background -->
-    <div class="animated-bg">
-        <div class="light-beam"></div>
-        <div class="light-beam"></div>
-        <div class="light-beam"></div>
-    </div>
+// deposit.js - Xử lý nạp tiền
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('💰 Deposit page loaded');
+    
+    // Kiểm tra đăng nhập
+    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+    if (!currentUser) {
+        window.location.href = 'index.html';
+        return;
+    }
+    
+    // Cập nhật thông tin header
+    updateHeaderInfo(currentUser);
+    
+    // Khởi tạo sidebar
+    initSidebar();
+    
+    // Tạo nội dung chuyển khoản tự động
+    const transferContent = document.getElementById('transferContent');
+    if (transferContent) {
+        transferContent.textContent = `${currentUser.username} naptien LDP`;
+    }
+    
+    console.log('✅ Deposit page initialized');
+});
 
-    <!-- Header -->
-    <header class="main-header">
-        <div class="menu-icon" id="menuIcon">
-            <span></span>
-            <span></span>
-            <span></span>
-        </div>
-        <a href="home.html" class="logo">LDP TOOLS</a>
-        <div class="user-info">
-            <span class="username" id="headerUsername">Username</span>
-            <div class="balance-box" id="headerBalance">0đ</div>
-        </div>
-    </header>
+// Cập nhật thông tin header
+function updateHeaderInfo(user) {
+    const usernameEl = document.getElementById('headerUsername');
+    const balanceEl = document.getElementById('headerBalance');
+    
+    if (usernameEl) usernameEl.textContent = user.username;
+    if (balanceEl) balanceEl.textContent = formatCurrency(user.balance);
+}
 
-    <!-- Sidebar -->
-    <nav class="sidebar" id="sidebar">
-        <ul>
-            <li onclick="window.location.href='home.html'">
-                <i>🏠</i> Trang chủ
-            </li>
-            <li onclick="window.location.href='#account'">
-                <i>👤</i> Kiểm tra tài khoản
-            </li>
-            <li onclick="window.location.href='deposit.html'">
-                <i>💰</i> Nạp tiền
-            </li>
-            <li onclick="showHistory()">
-                <i>📜</i> Lịch sử mua
-            </li>
-            <li id="adminPanelLink" class="hidden" onclick="window.location.href='admin-panel.html'">
-                <i>⚙️</i> Control Panel
-            </li>
-            <li onclick="logout()">
-                <i>🚪</i> Đăng xuất
-            </li>
-        </ul>
-    </nav>
+// Định dạng tiền tệ
+function formatCurrency(amount) {
+    return new Intl.NumberFormat('vi-VN', {
+        style: 'currency',
+        currency: 'VND'
+    }).format(amount);
+}
 
-    <!-- Main Content -->
-    <main class="main-content">
-        <div class="deposit-container">
-            <div class="deposit-box glass-container">
-                <h2 class="deposit-title">NẠP TIỀN VÀO TÀI KHOẢN</h2>
+// Khởi tạo sidebar
+function initSidebar() {
+    const menuIcon = document.getElementById('menuIcon');
+    const sidebar = document.getElementById('sidebar');
+    
+    if (menuIcon && sidebar) {
+        menuIcon.addEventListener('click', function() {
+            sidebar.classList.toggle('active');
+        });
+    }
+}
 
-                <div class="qr-section">
-                    <p style="text-align: center; color: var(--light-purple); margin-bottom: 15px;">
-                        Quét mã QR dưới đây để nạp tiền
-                    </p>
-                    <img src="images/qr-code.png" alt="QR Code" class="qr-code-img" id="qrCode">
-                </div>
-
-                <div class="bank-info">
-                    <h3 style="color: var(--light-purple); margin-bottom: 20px; text-align: center;">Thông Tin Chuyển Khoản</h3>
-                    
-                    <div class="info-row">
-                        <span class="info-label">Ngân hàng:</span>
-                        <span class="info-value">Viettin Bank</span>
-                    </div>
-
-                    <div class="info-row">
-                        <span class="info-label">Tên tài khoản:</span>
-                        <span class="info-value">VO TIEN DAT</span>
-                    </div>
-
-                    <div class="info-row">
-                        <span class="info-label">Số tài khoản:</span>
-                        <div style="display: flex; align-items: center; gap: 10px;">
-                            <span class="info-value" id="accountNumber">108880124782</span>
-                            <button class="copy-btn" onclick="copyText('accountNumber')">Sao chép</button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="transfer-content">
-                    <p style="color: var(--light-purple); margin-bottom: 10px; font-size: 0.9rem;">Nội dung chuyển khoản:</p>
-                    <p class="transfer-content-text" id="transferContent">Loading...</p>
-                    <button class="copy-btn" style="margin-top: 10px;" onclick="copyText('transferContent')">📋 Sao chép nội dung</button>
-                </div>
-
-                <div class="voucher-section">
-                    <label class="quantity-label">Nhập mã giảm giá (nếu có)</label>
-                    <input type="text" class="voucher-input" id="voucherInput" placeholder="Nhập mã giảm giá">
-                    <button class="apply-voucher-btn" onclick="applyVoucher()">Áp dụng mã giảm giá</button>
-                </div>
-
-                <div style="margin-top: 30px; padding: 20px; background: rgba(239, 68, 68, 0.1); border: 1px solid var(--error-red); border-radius: 10px;">
-                    <p style="color: var(--error-red); font-size: 0.9rem; line-height: 1.6; margin: 0;">
-                        ⚠️ <strong>Lưu ý quan trọng:</strong><br>
-                        - Vui lòng chuyển khoản đúng nội dung để được cộng tiền tự động<br>
-                        - Sau khi chuyển khoản, liên hệ Admin để được xác nhận<br>
-                        - Thời gian xử lý: 5-30 phút trong giờ hành chính<br>
-                        - Không chịu trách nhiệm nếu chuyển sai nội dung
-                    </p>
-                </div>
-
-                <button class="btn mt-30" onclick="window.location.href='home.html'">Quay lại trang chủ</button>
-            </div>
-        </div>
-    </main>
-
-    <!-- Notification -->
-    <div id="notification" class="notification">
-        <div class="notification-icon">✓</div>
-        <div class="notification-content">
-            <div class="notification-title">Thông báo</div>
-            <div class="notification-message">Message here</div>
-        </div>
-    </div>
-
-    <script src="js/main.js"></script>
-    <script>
-    // Mouse trail effect
-    document.addEventListener('mousemove', function(e) {
-        const trail = document.createElement('div');
-        trail.className = 'mouse-trail';
-        trail.style.left = e.pageX - 3 + 'px';
-        trail.style.top = e.pageY - 3 + 'px';
-        document.body.appendChild(trail);
-
-        setTimeout(() => {
-            trail.remove();
-        }, 600);
+// Sao chép text
+function copyText(elementId) {
+    const element = document.getElementById(elementId);
+    const text = element.textContent;
+    navigator.clipboard.writeText(text).then(() => {
+        showNotification('Đã sao chép!');
     });
-</script>
-</body>
-</html>
+}
 
+// Áp dụng voucher
+function applyVoucher() {
+    showNotification('Mã giảm giá không hợp lệ hoặc đã hết hạn!', 'error');
+}
+
+// Hiển thị thông báo
+function showNotification(message, type = 'success') {
+    const notification = document.getElementById('notification');
+    if (!notification) {
+        alert(message);
+        return;
+    }
+    
+    const messageEl = notification.querySelector('.notification-message');
+    if (!messageEl) return;
+    
+    messageEl.textContent = message;
+    notification.className = `notification ${type}`;
+    notification.classList.add('show');
+    
+    setTimeout(() => {
+        notification.classList.remove('show');
+    }, 3000);
+}
+
+// Đăng xuất
+function logout() {
+    localStorage.removeItem('currentUser');
+    window.location.href = 'index.html';
+}
+
+// Hiển thị lịch sử
+function showHistory() {
+    showNotification('Tính năng đang được phát triển...');
+}

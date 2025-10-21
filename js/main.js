@@ -527,3 +527,23 @@ function copyText(elementId) {
         showNotification('Đã sao chép!');
     });
 }
+// utils.js - Đồng bộ dữ liệu giữa các tab/thiết bị
+function syncData() {
+    // Lắng nghe thay đổi từ các tab khác
+    window.addEventListener('storage', function(e) {
+        if (e.key === 'users' || e.key === 'tools' || e.key === 'vouchers' || e.key === 'purchaseHistory') {
+            console.log('🔄 Data synced from other tab:', e.key);
+            location.reload();
+        }
+    });
+    
+    // Thông báo khi dữ liệu thay đổi
+    function notifyDataChange(key) {
+        localStorage.setItem(key + '_sync', Date.now().toString());
+    }
+    
+    return { notifyDataChange };
+}
+
+// Thêm vào mỗi file JS sau khi khởi tạo
+const dataSync = syncData();

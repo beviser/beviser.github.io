@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LDP TOOLS - Lịch Sử Mua</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <!-- Animated Background -->
+    <div class="animated-bg">
+        <div class="light-beam"></div>
+        <div class="light-beam"></div>
+        <div class="light-beam"></div>
+    </div>
+
+    <!-- Header -->
+    <header class="main-header">
+        <div class="menu-icon" id="menuIcon">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+        <a href="home.html" class="logo">LDP TOOLS</a>
+        <div class="user-info">
+            <span class="username" id="headerUsername">Username</span>
+            <div class="balance-box" id="headerBalance">0đ</div>
+        </div>
+    </header>
+
+    <!-- Sidebar -->
+    <nav class="sidebar" id="sidebar">
+        <ul>
+            <li onclick="window.location.href='home.html'">
+                <i>🏠</i> Trang chủ
+            </li>
+            <li onclick="window.location.href='account.html'">
+                <i>👤</i> Kiểm tra tài khoản
+            </li>
+            <li onclick="window.location.href='deposit.html'">
+                <i>💰</i> Nạp tiền
+            </li>
+            <li onclick="window.location.href='history.html'" class="active">
+                <i>📜</i> Lịch sử mua
+            </li>
+            <li id="adminPanelLink" class="hidden" onclick="window.location.href='admin-panel.html'">
+                <i>⚙️</i> Control Panel
+            </li>
+            <li onclick="logout()">
+                <i>🚪</i> Đăng xuất
+            </li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="history-page-container">
+            <div class="history-header">
+                <h1 class="history-title">LỊCH SỬ MUA HÀNG</h1>
+                <p class="history-subtitle">Xem lại toàn bộ lịch sử giao dịch của bạn</p>
+            </div>
+
+            <div class="history-filters">
+                <div class="filter-group">
+                    <label>Lọc theo tool:</label>
+                    <select id="toolFilter" onchange="filterHistory()">
+                        <option value="all">Tất cả tools</option>
+                        <option value="toolv1">Tool V1</option>
+                        <option value="toolmd5">Tool MD5</option>
+                        <option value="toolsicbo">Tool Sicbo</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label>Lọc theo trạng thái:</label>
+                    <select id="statusFilter" onchange="filterHistory()">
+                        <option value="all">Tất cả trạng thái</option>
+                        <option value="active">Đang hoạt động</option>
+                        <option value="expired">Đã hết hạn</option>
+                    </select>
+                </div>
+                <button class="btn secondary" onclick="resetFilters()">
+                    🔄 Reset bộ lọc
+                </button>
+            </div>
+
+            <div class="history-stats">
+                <div class="stat-card">
+                    <div class="stat-value" id="totalPurchases">0</div>
+                    <div class="stat-label">Tổng số lần mua</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="totalSpent">0đ</div>
+                    <div class="stat-label">Tổng chi tiêu</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="activeTools">0</div>
+                    <div class="stat-label">Tool đang hoạt động</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="expiredTools">0</div>
+                    <div class="stat-label">Tool đã hết hạn</div>
+                </div>
+            </div>
+
+            <div class="history-content" id="historyContent">
+                <!-- History items will be loaded here -->
+            </div>
+        </div>
+    </main>
+
+    <!-- Notification -->
+    <div id="notification" class="notification">
+        <div class="notification-icon">✓</div>
+        <div class="notification-content">
+            <div class="notification-title">Thông báo</div>
+            <div class="notification-message">Message here</div>
+        </div>
+    </div>
+
+    <script src="js/history.js"></script>
+    <script>
+    // Mouse trail effect
+    document.addEventListener('mousemove', function(e) {
+        const trail = document.createElement('div');
+        trail.className = 'mouse-trail';
+        trail.style.left = e.pageX - 3 + 'px';
+        trail.style.top = e.pageY - 3 + 'px';
+        document.body.appendChild(trail);
+
+        setTimeout(() => {
+            trail.remove();
+        }, 600);
+    });
+    </script>
+</body>
+</html>

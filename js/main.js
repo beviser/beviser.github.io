@@ -1,12 +1,20 @@
-// main.js - Xử lý trang chủ và chức năng chung
+// main.js - Xử lý trang chủ và chức năng chung (ĐÃ SỬA)
 
 let selectedPrices = {
-    toolv1: { price: 10000, duration: 1 },
-    toolmd5: { price: 10000, duration: 1 },
-    toolsicbo: { price: 10000, duration: 1 }
+    toolv1: { price: 10000, duration: 1, unit: 'hour' },
+    toolmd5: { price: 10000, duration: 1, unit: 'hour' },
+    toolsicbo: { price: 10000, duration: 1, unit: 'hour' }
+};
+
+let appliedVouchers = {
+    toolv1: null,
+    toolmd5: null,
+    toolsicbo: null
 };
 
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('🏠 Home page loaded');
+    
     // Kiểm tra đăng nhập
     const currentUser = JSON.parse(localStorage.getItem('currentUser'));
     if (!currentUser) {
@@ -31,75 +39,30 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Khởi tạo sự kiện cho các lựa chọn giá
     initPriceOptions();
+    
+    console.log('✅ Home page initialized');
 });
-
-function applyVoucher(toolName) {
-    const voucherInput = document.getElementById(`voucherInput${toolName}`).value.trim();
-    if (!voucherInput) {
-        showNotification('Vui lòng nhập mã giảm giá!', 'error');
-        return;
-    }
-
-    const vouchers = JSON.parse(localStorage.getItem('vouchers')) || [];
-    const voucher = vouchers.find(v => v.code === voucherInput && (v.tool === toolName || v.tool === 'all'));
-
-    if (!voucher) {
-        showNotification('Mã giảm giá không hợp lệ!', 'error');
-        return;
-    }
-
-    if (voucher.expiry < Date.now()) {
-        showNotification('Mã giảm giá đã hết hạn!', 'error');
-        return;
-    }
-
-    if (voucher.usedCount >= voucher.maxUses) {
-        showNotification('Mã giảm giá đã hết lượt sử dụng!', 'error');
-        return;
-    }
-
-    // Lưu thông tin voucher đã áp dụng cho tool này
-    selectedPrices[toolName].voucher = voucher;
-
-    showNotification(`Áp dụng thành công! Giảm ${voucher.discount}% cho ${toolName}`);
-
-    // Cập nhật giao diện hiển thị giá
-    updateAllPricesDisplay(toolName, voucher.discount);
-}
-
-function updateAllPricesDisplay(toolName, discount) {
-    const toolCard = document.getElementById(`${toolName}Card`);
-    const priceOptions = toolCard.querySelectorAll('.price-option');
-    priceOptions.forEach(option => {
-        const originalPrice = parseInt(option.getAttribute('data-price'));
-        const discountedPrice = originalPrice - (originalPrice * discount) / 100;
-        const priceAmount = option.querySelector('.price-amount');
-        if (priceAmount) {
-            priceAmount.innerHTML = `
-                <span style="text-decoration: line-through; color: var(--error-red); font-size: 0.8em;">${formatCurrency(originalPrice)}</span>
-                <br>${formatCurrency(discountedPrice)}
-            `;
-        }
-    });
-}
 
 // Khởi tạo sự kiện cho các lựa chọn giá
 function initPriceOptions() {
     document.querySelectorAll('.price-option').forEach(option => {
         option.addEventListener('click', function() {
             const toolCard = this.closest('.tool-card');
-            const toolId = toolCard.id.replace('Card', ''); // toolv1, toolmd5, toolsicbo
+            const toolId = toolCard.id.replace('Card', '');
             const price = parseInt(this.getAttribute('data-price'));
             const duration = parseInt(this.getAttribute('data-duration'));
+            const unit = this.getAttribute('data-unit');
 
             // Lưu lựa chọn
-            selectedPrices[toolId] = { price, duration };
+            selectedPrices[toolId] = { price, duration, unit };
 
             // Đổi trạng thái selected
             this.parentElement.querySelectorAll('.price-option').forEach(opt => {
                 opt.classList.remove('selected');
             });
             this.classList.add('selected');
+            
+            console.log(`💰 Selected ${toolId}: ${price}đ for ${duration} ${unit}`);
         });
     });
 }
@@ -156,7 +119,7 @@ function loadToolsStatus() {
                 buyBtn.disabled = true;
                 if (timerEl) timerEl.classList.remove('hidden');
                 if (openBtn) openBtn.classList.remove('hidden');
-                if (keyInput) keyInput.value = tool.key; // Hiển thị key đã kích hoạt
+                if (keyInput) keyInput.value = tool.key || '';
 
                 // Cập nhật bộ đếm thời gian
                 updateToolTimer(toolName, tool.expiry);
@@ -207,167 +170,7 @@ function updateToolTimer(toolName, expiry) {
     update();
 }
 
-// Mua tool
-// main.js - Xử lý trang chủ và chức năng chung
-
-let selectedPrices = {
-    toolv1: { price: 10000, duration: 1 },
-    toolmd5: { price: 10000, duration: 1 },
-    toolsicbo: { price: 10000, duration: 1 }
-};
-
-document.addEventListener('DOMContentLoaded', function() {
-    // Kiểm tra đăng nhập
-    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
-    if (!currentUser) {
-        window.location.href = 'index.html';
-        return;
-    }
-    
-    // Cập nhật thông tin header
-    updateHeaderInfo(currentUser);
-    
-    // Khởi tạo sidebar
-    initSidebar();
-    
-    // Tải trạng thái tools
-    loadToolsStatus();
-    
-    // Hiển thị/hide admin panel link
-    if (currentUser.isAdmin) {
-        const adminLink = document.getElementById('adminPanelLink');
-        if (adminLink) adminLink.classList.remove('hidden');
-    }
-
-    // Khởi tạo sự kiện cho các lựa chọn giá
-    initPriceOptions();
-});
-
-// Khởi tạo sự kiện cho các lựa chọn giá
-function initPriceOptions() {
-    document.querySelectorAll('.price-option').forEach(option => {
-        option.addEventListener('click', function() {
-            const toolCard = this.closest('.tool-card');
-            const toolId = toolCard.id.replace('Card', ''); // toolv1, toolmd5, toolsicbo
-            const price = parseInt(this.getAttribute('data-price'));
-            const duration = parseInt(this.getAttribute('data-duration'));
-
-            // Lưu lựa chọn
-            selectedPrices[toolId] = { price, duration };
-
-            // Đổi trạng thái selected
-            this.parentElement.querySelectorAll('.price-option').forEach(opt => {
-                opt.classList.remove('selected');
-            });
-            this.classList.add('selected');
-        });
-    });
-}
-
-// Cập nhật thông tin header
-function updateHeaderInfo(user) {
-    const usernameEl = document.getElementById('headerUsername');
-    const balanceEl = document.getElementById('headerBalance');
-    
-    if (usernameEl) usernameEl.textContent = user.username;
-    if (balanceEl) balanceEl.textContent = formatCurrency(user.balance);
-}
-
-// Định dạng tiền tệ
-function formatCurrency(amount) {
-    return new Intl.NumberFormat('vi-VN', {
-        style: 'currency',
-        currency: 'VND'
-    }).format(amount);
-}
-
-// Khởi tạo sidebar
-function initSidebar() {
-    const menuIcon = document.getElementById('menuIcon');
-    const sidebar = document.getElementById('sidebar');
-    
-    if (menuIcon && sidebar) {
-        menuIcon.addEventListener('click', function() {
-            sidebar.classList.toggle('active');
-        });
-    }
-}
-
-// Tải trạng thái tools
-function loadToolsStatus() {
-    const tools = JSON.parse(localStorage.getItem('tools')) || {};
-    
-    Object.keys(tools).forEach(toolName => {
-        const tool = tools[toolName];
-        const toolCard = document.getElementById(`${toolName}Card`);
-        
-        if (toolCard) {
-            const statusEl = toolCard.querySelector('.tool-status');
-            const buyBtn = toolCard.querySelector('.buy-btn');
-            const timerEl = toolCard.querySelector('.timer-display');
-            const openBtn = toolCard.querySelector('#toolv1OpenBtn, #toolmd5OpenBtn, #toolsicboOpenBtn');
-            const keyInput = toolCard.querySelector('.key-input');
-            
-            if (tool.active && tool.expiry > Date.now()) {
-                // Tool đang active
-                statusEl.textContent = '✅ Đã kích hoạt';
-                statusEl.className = 'tool-status unlocked';
-                buyBtn.textContent = 'Đã mua';
-                buyBtn.disabled = true;
-                if (timerEl) timerEl.classList.remove('hidden');
-                if (openBtn) openBtn.classList.remove('hidden');
-                if (keyInput) keyInput.value = tool.key; // Hiển thị key đã kích hoạt
-
-                // Cập nhật bộ đếm thời gian
-                updateToolTimer(toolName, tool.expiry);
-            } else {
-                // Tool chưa active
-                statusEl.textContent = '🔒 Đã khóa';
-                statusEl.className = 'tool-status locked';
-                buyBtn.textContent = 'Thuê ngay';
-                buyBtn.disabled = false;
-                if (timerEl) timerEl.classList.add('hidden');
-                if (openBtn) openBtn.classList.add('hidden');
-            }
-        }
-    });
-}
-
-// Cập nhật bộ đếm thời gian cho tool
-function updateToolTimer(toolName, expiry) {
-    const timerElement = document.getElementById(`${toolName}TimeLeft`);
-    if (!timerElement) return;
-
-    function update() {
-        const now = Date.now();
-        const timeLeft = expiry - now;
-
-        if (timeLeft <= 0) {
-            timerElement.textContent = 'Hết hạn';
-            timerElement.classList.add('timer-expired');
-            // Tự động vô hiệu hóa tool khi hết hạn
-            const tools = JSON.parse(localStorage.getItem('tools')) || {};
-            if (tools[toolName]) {
-                tools[toolName].active = false;
-                localStorage.setItem('tools', JSON.stringify(tools));
-            }
-            // Reload để cập nhật trạng thái
-            window.location.reload();
-            return;
-        }
-
-        const hours = Math.floor(timeLeft / (1000 * 60 * 60));
-        const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
-
-        timerElement.textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-        setTimeout(update, 1000);
-    }
-
-    update();
-}
-
-// Mua tool
+// Mua tool - ĐÃ SỬA HOÀN TOÀN
 function buyTool(toolName) {
     const currentUser = JSON.parse(localStorage.getItem('currentUser'));
     const users = JSON.parse(localStorage.getItem('users'));
@@ -377,29 +180,33 @@ function buyTool(toolName) {
     const quantityInput = document.getElementById(`${toolName}Quantity`);
     const quantity = quantityInput ? parseInt(quantityInput.value) || 1 : 1;
 
-    // TÍNH TOÁN THỜI GIAN ĐÚNG - SỬA LỖI
-    let totalDurationHours = 0;
-    switch(selectedPrice.duration) {
-        case 1: // 1 giờ
-            totalDurationHours = 1;
-            break;
-        case 3: // 3 giờ
-            totalDurationHours = 3;
-            break;
-        case 24: // 1 ngày
-            totalDurationHours = 24;
-            break;
-        case 168: // 1 tuần
-            totalDurationHours = 168; // 7 ngày * 24 giờ
-            break;
-        default:
-            totalDurationHours = selectedPrice.duration;
+    if (!selectedPrice) {
+        showNotification('Vui lòng chọn thời gian thuê!', 'error');
+        return;
     }
 
-    const totalPrice = selectedPrice.price * quantity;
-    const totalTime = totalDurationHours * 60 * 60 * 1000; // Chuyển đổi sang milliseconds
+    // Tính tổng thời gian theo milliseconds
+    let totalDurationMs = 0;
+    switch(selectedPrice.unit) {
+        case 'hour':
+            totalDurationMs = selectedPrice.duration * 60 * 60 * 1000;
+            break;
+        case 'day':
+            totalDurationMs = selectedPrice.duration * 24 * 60 * 60 * 1000;
+            break;
+        default:
+            totalDurationMs = selectedPrice.duration * 60 * 60 * 1000;
+    }
 
-    if (currentUser.balance < totalPrice) {
+    // Áp dụng voucher nếu có
+    let finalPrice = selectedPrice.price * quantity;
+    const voucher = appliedVouchers[toolName];
+    if (voucher) {
+        finalPrice = finalPrice * (1 - voucher.discount / 100);
+        finalPrice = Math.round(finalPrice);
+    }
+
+    if (currentUser.balance < finalPrice) {
         showNotification('Số dư không đủ! Vui lòng nạp thêm tiền.', 'error');
         setTimeout(() => {
             window.location.href = 'deposit.html';
@@ -408,11 +215,11 @@ function buyTool(toolName) {
     }
 
     // Trừ tiền
-    currentUser.balance -= totalPrice;
+    currentUser.balance -= finalPrice;
 
     // Tạo key và thời gian hết hạn
     const key = generateKey();
-    const expiry = Date.now() + totalTime;
+    const expiry = Date.now() + totalDurationMs;
 
     // Cập nhật tool
     tools[toolName] = {
@@ -423,7 +230,9 @@ function buyTool(toolName) {
 
     // Cập nhật dữ liệu
     const userIndex = users.findIndex(u => u.username === currentUser.username);
-    users[userIndex] = currentUser;
+    if (userIndex !== -1) {
+        users[userIndex] = currentUser;
+    }
 
     // Lưu lịch sử mua hàng
     const purchaseHistory = JSON.parse(localStorage.getItem('purchaseHistory')) || [];
@@ -431,13 +240,11 @@ function buyTool(toolName) {
         toolName: toolName,
         username: currentUser.username,
         key: key,
-        price: totalPrice,
-        duration: totalDurationHours,
+        price: finalPrice,
+        duration: selectedPrice.duration,
+        unit: selectedPrice.unit,
         expiry: expiry,
-        purchaseDate: Date.now(),
-        durationType: selectedPrice.duration === 1 ? '1 giờ' : 
-                     selectedPrice.duration === 3 ? '3 giờ' :
-                     selectedPrice.duration === 24 ? '1 ngày' : '1 tuần'
+        purchaseDate: Date.now()
     });
     
     localStorage.setItem('purchaseHistory', JSON.stringify(purchaseHistory));
@@ -449,7 +256,12 @@ function buyTool(toolName) {
     document.getElementById('generatedKey').textContent = key;
     showModal('keyModal');
 
-    showNotification(`Mua thành công! Thời gian: ${getDurationText(selectedPrice.duration)}`);
+    showNotification(`Mua thành công! Thời gian: ${getDurationText(selectedPrice.duration, selectedPrice.unit)}`);
+
+    // Cập nhật voucher đã sử dụng
+    if (voucher) {
+        updateVoucherUsage(voucher.code);
+    }
 
     // Reload để cập nhật trạng thái
     setTimeout(() => {
@@ -457,13 +269,14 @@ function buyTool(toolName) {
     }, 2000);
 }
 
-function getDurationText(duration) {
-    switch(duration) {
-        case 1: return '1 giờ';
-        case 3: return '3 giờ';
-        case 24: return '1 ngày';
-        case 168: return '1 tuần';
-        default: return `${duration} giờ`;
+function getDurationText(duration, unit) {
+    switch(unit) {
+        case 'hour':
+            return duration === 1 ? '1 giờ' : `${duration} giờ`;
+        case 'day':
+            return duration === 1 ? '1 ngày' : `${duration} ngày`;
+        default:
+            return `${duration} giờ`;
     }
 }
 
@@ -509,6 +322,48 @@ function activateKey(toolName) {
     }
 }
 
+// Áp dụng voucher
+function applyVoucher(toolName) {
+    const voucherInput = document.getElementById(`voucherInput${toolName}`);
+    if (!voucherInput) {
+        showNotification('Không tìm thấy ô nhập voucher!', 'error');
+        return;
+    }
+    
+    const voucherCode = voucherInput.value.trim();
+    if (!voucherCode) {
+        showNotification('Vui lòng nhập mã giảm giá!', 'error');
+        return;
+    }
+
+    const vouchers = JSON.parse(localStorage.getItem('vouchers')) || [];
+    const voucher = vouchers.find(v => 
+        v.code === voucherCode && 
+        (v.tool === toolName || v.tool === 'all') &&
+        v.expiry > Date.now() &&
+        v.usedCount < v.maxUses
+    );
+
+    if (!voucher) {
+        showNotification('Mã giảm giá không hợp lệ hoặc đã hết hạn!', 'error');
+        return;
+    }
+
+    appliedVouchers[toolName] = voucher;
+    showNotification(`Áp dụng thành công! Giảm ${voucher.discount}% cho ${toolName}`);
+}
+
+// Cập nhật số lần sử dụng voucher
+function updateVoucherUsage(voucherCode) {
+    const vouchers = JSON.parse(localStorage.getItem('vouchers')) || [];
+    const voucherIndex = vouchers.findIndex(v => v.code === voucherCode);
+    
+    if (voucherIndex !== -1) {
+        vouchers[voucherIndex].usedCount += 1;
+        localStorage.setItem('vouchers', JSON.stringify(vouchers));
+    }
+}
+
 // Hiển thị modal
 function showModal(modalId) {
     const modal = document.getElementById(modalId);
@@ -533,8 +388,7 @@ function copyKey() {
     });
 }
 
-// Hiển thị lịch sử
-// main.js - SỬA LỊCH SỬ MUA HÀNG
+// Hiển thị lịch sử mua hàng
 function showHistory() {
     const currentUser = JSON.parse(localStorage.getItem('currentUser'));
     if (!currentUser) return;
@@ -544,7 +398,6 @@ function showHistory() {
     
     const historyContent = document.getElementById('historyContent');
     if (!historyContent) {
-        // Tạo modal history nếu chưa có
         createHistoryModal();
         return;
     }
@@ -560,7 +413,6 @@ function showHistory() {
             </div>
         `;
     } else {
-        // Sắp xếp theo thời gian mua mới nhất
         userHistory.sort((a, b) => b.purchaseDate - a.purchaseDate);
         
         userHistory.forEach((item, index) => {
@@ -574,16 +426,16 @@ function showHistory() {
             historyCard.innerHTML = `
                 <div class="history-header">
                     <div class="history-tool-name">${getToolDisplayName(item.toolName)}</div>
-                    <div class="history-date">${new Date(item.purchaseDate).toLocaleDateString('vi-VN')} - ${new Date(item.purchaseDate).toLocaleTimeString('vi-VN')}</div>
+                    <div class="history-date">${new Date(item.purchaseDate).toLocaleDateString('vi-VN')}</div>
                 </div>
                 <div class="history-details">
                     <div class="history-detail-item">
-                        <div class="detail-label">Key kích hoạt</div>
+                        <div class="detail-label">Key</div>
                         <div class="detail-value" style="font-family: monospace; color: var(--accent-purple);">${item.key}</div>
                     </div>
                     <div class="history-detail-item">
-                        <div class="detail-label">Thời gian thuê</div>
-                        <div class="detail-value">${item.durationType || getDurationText(item.duration)}</div>
+                        <div class="detail-label">Thời gian</div>
+                        <div class="detail-value">${getDurationText(item.duration, item.unit)}</div>
                     </div>
                     <div class="history-detail-item">
                         <div class="detail-label">Giá</div>
@@ -600,7 +452,7 @@ function showHistory() {
                 <div class="timer-display">
                     <span class="timer-icon">⏱️</span>
                     <span class="timer-text">Thời gian còn lại: 
-                        <span class="timer-value" id="historyTimer${index}">${hoursLeft > 0 ? hoursLeft + ' giờ ' : ''}${minutesLeft} phút</span>
+                        <span class="timer-value">${hoursLeft > 0 ? hoursLeft + ' giờ ' : ''}${minutesLeft} phút</span>
                     </span>
                 </div>
                 ` : ''}
@@ -631,53 +483,14 @@ function createHistoryModal() {
                     <button class="close-modal" onclick="closeModal('historyModal')">×</button>
                 </div>
                 <div class="modal-body">
-                    <div id="historyContent" class="history-container">
-                        <!-- History will be loaded here -->
-                    </div>
+                    <div id="historyContent" class="history-container"></div>
                 </div>
             </div>
         </div>
     `;
     
     document.body.insertAdjacentHTML('beforeend', modalHTML);
-    showHistory(); // Gọi lại để hiển thị nội dung
-}
-
-function formatDuration(duration) {
-    if (duration < 24) {
-        return `${duration} giờ`;
-    } else if (duration === 24) {
-        return '1 ngày';
-    } else if (duration === 168) {
-        return '1 tuần';
-    } else {
-        return `${duration} giờ`;
-    }
-}
-
-function updateHistoryTimer(elementId, expiry) {
-    const timerElement = document.getElementById(elementId);
-    if (!timerElement) return;
-
-    function update() {
-        const now = Date.now();
-        const timeLeft = expiry - now;
-
-        if (timeLeft <= 0) {
-            timerElement.textContent = 'Hết hạn';
-            timerElement.classList.add('timer-expired');
-            return;
-        }
-
-        const hours = Math.floor(timeLeft / (1000 * 60 * 60));
-        const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
-
-        timerElement.textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-        setTimeout(update, 1000);
-    }
-
-    update();
+    showHistory();
 }
 
 // Đăng xuất
@@ -689,146 +502,13 @@ function logout() {
 // Hiển thị thông báo
 function showNotification(message, type = 'success') {
     const notification = document.getElementById('notification');
-    const messageEl = notification.querySelector('.notification-message');
-    
-    messageEl.textContent = message;
-    notification.className = `notification ${type}`;
-    notification.classList.add('show');
-    
-    setTimeout(() => {
-        notification.classList.remove('show');
-    }, 3000);
-}
-
-// Cho deposit.html
-function copyText(elementId) {
-    const element = document.getElementById(elementId);
-    const text = element.textContent;
-    navigator.clipboard.writeText(text).then(() => {
-        showNotification('Đã sao chép!');
-    });
-}
-
-function applyVoucher() {
-    showNotification('Mã giảm giá không hợp lệ hoặc đã hết hạn!', 'error');
-}
-
-// Tạo key ngẫu nhiên
-function generateKey() {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let key = '';
-    for (let i = 0; i < 16; i++) {
-        key += chars.charAt(Math.floor(Math.random() * chars.length));
-        if ((i + 1) % 4 === 0 && i !== 15) {
-            key += '-';
-        }
-    }
-    return key;
-}
-
-// Kích hoạt tool bằng key
-function activateKey(toolName) {
-    const keyInput = document.getElementById(`${toolName}Key`);
-    const key = keyInput.value.trim();
-
-    if (!key) {
-        showNotification('Vui lòng nhập key!', 'error');
+    if (!notification) {
+        alert(message);
         return;
     }
-
-    const tools = JSON.parse(localStorage.getItem('tools')) || {};
-    const tool = tools[toolName];
-
-    if (tool && tool.key === key) {
-        if (tool.expiry > Date.now()) {
-            tool.active = true;
-            localStorage.setItem('tools', JSON.stringify(tools));
-            showNotification('Kích hoạt thành công!');
-            setTimeout(() => {
-                window.location.reload();
-            }, 1500);
-        } else {
-            showNotification('Key đã hết hạn!', 'error');
-        }
-    } else {
-        showNotification('Key không hợp lệ!', 'error');
-    }
-}
-
-// Hiển thị modal
-function showModal(modalId) {
-    const modal = document.getElementById(modalId);
-    if (modal) {
-        modal.classList.add('show');
-    }
-}
-
-// Đóng modal
-function closeModal(modalId) {
-    const modal = document.getElementById(modalId);
-    if (modal) {
-        modal.classList.remove('show');
-    }
-}
-
-// Sao chép key
-function copyKey() {
-    const keyText = document.getElementById('generatedKey').textContent;
-    navigator.clipboard.writeText(keyText).then(() => {
-        showNotification('Đã sao chép key!');
-    });
-}
-
-// Hiển thị lịch sử
-function showHistory() {
-    // Tải lịch sử từ localStorage (giả lập)
-    const history = JSON.parse(localStorage.getItem('purchaseHistory')) || [];
-    const historyContent = document.getElementById('historyContent');
     
-    if (history.length === 0) {
-        historyContent.innerHTML = '<div class="empty-state"><div class="empty-icon">📜</div><div class="empty-title">Chưa có lịch sử mua hàng</div></div>';
-    } else {
-        historyContent.innerHTML = history.map(item => `
-            <div class="history-card">
-                <div class="history-header">
-                    <div class="history-tool-name">${item.toolName}</div>
-                    <div class="history-date">${new Date(item.date).toLocaleDateString('vi-VN')}</div>
-                </div>
-                <div class="history-details">
-                    <div class="history-detail-item">
-                        <div class="detail-label">Key</div>
-                        <div class="detail-value">${item.key}</div>
-                    </div>
-                    <div class="history-detail-item">
-                        <div class="detail-label">Thời gian</div>
-                        <div class="detail-value">${item.duration} giờ</div>
-                    </div>
-                    <div class="history-detail-item">
-                        <div class="detail-label">Giá</div>
-                        <div class="detail-value">${formatCurrency(item.price)}</div>
-                    </div>
-                    <div class="history-detail-item">
-                        <div class="detail-label">Trạng thái</div>
-                        <div class="status-badge ${item.expiry > Date.now() ? 'active' : 'expired'}">${item.expiry > Date.now() ? 'Đang hoạt động' : 'Hết hạn'}</div>
-                    </div>
-                </div>
-            </div>
-        `).join('');
-    }
-    
-    showModal('historyModal');
-}
-
-// Đăng xuất
-function logout() {
-    localStorage.removeItem('currentUser');
-    window.location.href = 'index.html';
-}
-
-// Hiển thị thông báo
-function showNotification(message, type = 'success') {
-    const notification = document.getElementById('notification');
     const messageEl = notification.querySelector('.notification-message');
+    if (!messageEl) return;
     
     messageEl.textContent = message;
     notification.className = `notification ${type}`;
@@ -847,13 +527,3 @@ function copyText(elementId) {
         showNotification('Đã sao chép!');
     });
 }
-
-function applyVoucher() {
-    showNotification('Mã giảm giá không hợp lệ hoặc đã hết hạn!', 'error');
-
-}
-
-
-
-
-

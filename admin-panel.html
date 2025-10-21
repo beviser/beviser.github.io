@@ -786,6 +786,122 @@
             debugContainer.appendChild(testBtn);
             document.body.appendChild(debugContainer);
         });
+        // Tải danh sách user - ĐÃ SỬA HOÀN TOÀN
+function loadUsersList() {
+    console.log('👥 Loading users list...');
+    
+    // Đọc trực tiếp từ localStorage
+    currentUsers = JSON.parse(localStorage.getItem('users')) || [];
+    const userList = document.getElementById('userList');
+    
+    if (!userList) {
+        console.error('❌ User list element not found!');
+        return;
+    }
+    
+    userList.innerHTML = '';
+    
+    console.log('📊 Total users in system:', currentUsers.length);
+    console.log('👥 All users:', currentUsers);
+    
+    // Lọc chỉ user thường (không phải admin)
+    const regularUsers = currentUsers.filter(user => !user.isAdmin);
+    
+    console.log('👤 Regular users found:', regularUsers.length);
+    
+    if (regularUsers.length === 0) {
+        userList.innerHTML = `
+            <div class="empty-state">
+                <div class="empty-icon">👤</div>
+                <div class="empty-title">Chưa có người dùng thường</div>
+                <div class="empty-description">
+                    Tổng user trong hệ thống: ${currentUsers.length}<br>
+                    Hiện chỉ có tài khoản admin
+                </div>
+            </div>
+        `;
+        return;
+    }
+    
+    // Hiển thị từng user
+    regularUsers.forEach(user => {
+        const userItem = document.createElement('div');
+        userItem.className = 'user-item';
+        userItem.innerHTML = `
+            <div class="user-details">
+                <div class="user-name">${user.username}</div>
+                <div class="user-balance">${formatCurrency(user.balance)}</div>
+                <div class="user-date">Đăng ký: ${new Date(user.createdAt).toLocaleDateString('vi-VN')}</div>
+            </div>
+            <div class="user-actions">
+                <button class="action-btn edit" onclick="editUser('${user.username}')">Sửa</button>
+                <button class="action-btn delete" onclick="deleteUser('${user.username}')">Xóa</button>
+            </div>
+        `;
+        userList.appendChild(userItem);
+    });
+    
+    console.log('✅ Users list loaded successfully');
+}
+
+// Xử lý chuyển tiền - ĐÃ SỬA HOÀN TOÀN
+function handleTransfer() {
+    console.log('💸 Processing transfer...');
+    
+    const username = document.getElementById('transferUsername').value.trim();
+    const amountInput = document.getElementById('transferAmount').value.trim();
+    
+    if (!username || !amountInput) {
+        showNotification('Vui lòng nhập đầy đủ thông tin!', 'error');
+        return;
+    }
+    
+    const amount = parseInt(amountInput);
+    
+    if (isNaN(amount) || amount < 1000) {
+        showNotification('Số tiền tối thiểu là 1,000đ!', 'error');
+        return;
+    }
+    
+    // Đọc và cập nhật dữ liệu
+    let users = JSON.parse(localStorage.getItem('users')) || [];
+    const userIndex = users.findIndex(u => u.username === username);
+    
+    if (userIndex === -1) {
+        showNotification('Không tìm thấy người dùng!', 'error');
+        return;
+    }
+    
+    const user = users[userIndex];
+    
+    if (user.isAdmin) {
+        showNotification('Không thể chuyển tiền cho tài khoản admin!', 'error');
+        return;
+    }
+    
+    // Cộng tiền cho user
+    const oldBalance = users[userIndex].balance;
+    users[userIndex].balance += amount;
+    
+    console.log(`💰 Transfer: ${username} | ${oldBalance} + ${amount} = ${users[userIndex].balance}`);
+    
+    // Lưu vào localStorage
+    localStorage.setItem('users', JSON.stringify(users));
+    
+    showNotification(`✅ Đã chuyển ${formatCurrency(amount)} cho ${username}`);
+    
+    // Reset form và cập nhật giao diện
+    document.getElementById('transferForm').reset();
+    loadAdminData();
+    
+    // Cập nhật header nếu user đang đăng nhập là user được chuyển tiền
+    const currentUser = JSON.parse(localStorage.getItem('currentUser'));
+    if (currentUser && currentUser.username === username) {
+        currentUser.balance += amount;
+        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+        updateHeaderInfo(currentUser);
+    }
+}
     </script>
     <script>
     // Mouse trail effect
@@ -804,3 +920,4 @@
 </body>
 
 </html>
+

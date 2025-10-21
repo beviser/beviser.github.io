@@ -257,39 +257,38 @@ function showHistory() {
     showNotification('Tính năng đang được phát triển...');
 }
 
-// Tùy chỉnh chat
-// SỬA HÀM TÙY CHỈNH - HOẠT ĐỘNG THỰC SỰ
 function customizeChat() {
-    console.log('Opening customize modal');
     const modal = document.getElementById('customizeModal');
     if (modal) {
         // Load saved settings
         const savedSettings = JSON.parse(localStorage.getItem('chatSettings')) || {};
         document.getElementById('themeColor').value = savedSettings.themeColor || 'purple';
         document.getElementById('chatStyle').value = savedSettings.chatStyle || 'default';
-        document.getElementById('fontSize').value = savedSettings.fontSize || 'normal';
         
         modal.classList.add('show');
-    } else {
-        console.error('Customize modal not found!');
     }
 }
 
 function applyCustomize() {
     const themeColor = document.getElementById('themeColor').value;
     const chatStyle = document.getElementById('chatStyle').value;
-    const fontSize = document.getElementById('fontSize').value;
-    
+
+    // Áp dụng màu chủ đạo
+    document.documentElement.style.setProperty('--primary-purple', getColorValue(themeColor));
+
+    // Áp dụng kiểu chat
+    const chatMessages = document.getElementById('chatMessages');
+    if (chatMessages) {
+        chatMessages.className = 'chat-messages ' + chatStyle;
+    }
+
     // Lưu cài đặt
     const settings = {
         themeColor: themeColor,
-        chatStyle: chatStyle,
-        fontSize: fontSize
+        chatStyle: chatStyle
     };
     localStorage.setItem('chatSettings', JSON.stringify(settings));
-    
-    // Áp dụng ngay lập tức
-    applyChatCustomization(settings);
+
     showNotification('Đã áp dụng tùy chỉnh!');
     closeModal('customizeModal');
 }
@@ -317,7 +316,7 @@ function applyChatCustomization(settings) {
     document.body.style.fontSize = getFontSize(settings.fontSize);
 }
 
-function getColorValue(color) {
+unction getColorValue(color) {
     const colors = {
         purple: '#6B46C1',
         blue: '#3B82F6',
@@ -328,24 +327,11 @@ function getColorValue(color) {
     return colors[color] || colors.purple;
 }
 
-function getAccentColor(color) {
-    const colors = {
-        purple: '#9333EA',
-        blue: '#2563EB',
-        green: '#059669',
-        red: '#DC2626',
-        orange: '#D97706'
-    };
-    return colors[color] || colors.purple;
-}
-
-function getFontSize(size) {
-    const sizes = {
-        normal: '14px',
-        large: '16px',
-        xlarge: '18px'
-    };
-    return sizes[size] || sizes.normal;
+function closeModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.classList.remove('show');
+    }
 }
 
 // Áp dụng cài đặt khi trang load
@@ -355,3 +341,4 @@ document.addEventListener('DOMContentLoaded', function() {
         applyChatCustomization(savedSettings);
     }
 });
+

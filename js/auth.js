@@ -1,4 +1,4 @@
-// auth.js - Xử lý đăng nhập và đăng ký
+// auth.js - Xử lý đăng nhập và đăng ký (ĐÃ SỬA)
 
 // Khởi tạo dữ liệu mẫu
 function initializeData() {
@@ -13,7 +13,7 @@ function initializeData() {
             }
         ];
         localStorage.setItem('users', JSON.stringify(users));
-        console.log('Initialized default admin user');
+        console.log('✅ Initialized default admin user');
     }
     
     if (!localStorage.getItem('tools')) {
@@ -24,18 +24,36 @@ function initializeData() {
         };
         localStorage.setItem('tools', JSON.stringify(tools));
     }
+    
+    if (!localStorage.getItem('vouchers')) {
+        localStorage.setItem('vouchers', JSON.stringify([]));
+    }
+    
+    if (!localStorage.getItem('purchaseHistory')) {
+        localStorage.setItem('purchaseHistory', JSON.stringify([]));
+    }
 }
 
 // Hiển thị thông báo
 function showNotification(message, type = 'success') {
     const notification = document.getElementById('notification');
-    const messageEl = notification.querySelector('.notification-message');
-    
-    if (!notification || !messageEl) {
-        console.error('Không tìm thấy element notification');
-        alert(message); // Fallback
+    if (!notification) {
+        // Tạo notification nếu chưa có
+        const notificationHTML = `
+            <div id="notification" class="notification">
+                <div class="notification-icon">✓</div>
+                <div class="notification-content">
+                    <div class="notification-title">Thông báo</div>
+                    <div class="notification-message">${message}</div>
+                </div>
+            </div>
+        `;
+        document.body.insertAdjacentHTML('beforeend', notificationHTML);
         return;
     }
+    
+    const messageEl = notification.querySelector('.notification-message');
+    if (!messageEl) return;
     
     messageEl.textContent = message;
     notification.className = `notification ${type}`;
@@ -49,7 +67,7 @@ function showNotification(message, type = 'success') {
 // Xử lý đăng ký
 function handleRegister(e) {
     e.preventDefault();
-    console.log('Register form submitted');
+    console.log('📝 Register form submitted');
     
     const username = document.getElementById('regUsername').value.trim();
     const password = document.getElementById('regPassword').value;
@@ -74,7 +92,6 @@ function handleRegister(e) {
     }
     
     let users = JSON.parse(localStorage.getItem('users')) || [];
-    console.log('Current users before registration:', users);
     
     // Kiểm tra tên đăng nhập đã tồn tại
     if (users.find(u => u.username === username)) {
@@ -94,8 +111,7 @@ function handleRegister(e) {
     users.push(newUser);
     localStorage.setItem('users', JSON.stringify(users));
     
-    console.log('New user registered:', newUser);
-    console.log('All users after registration:', users);
+    console.log('✅ New user registered:', newUser);
     
     showNotification('Đăng ký thành công! Đang chuyển hướng...');
     
@@ -107,7 +123,7 @@ function handleRegister(e) {
 // Xử lý đăng nhập
 function handleLogin(e) {
     e.preventDefault();
-    console.log('Login form submitted');
+    console.log('🔐 Login form submitted');
     
     const username = document.getElementById('username').value.trim();
     const password = document.getElementById('password').value;
@@ -118,7 +134,7 @@ function handleLogin(e) {
     if (user) {
         // Lưu thông tin người dùng hiện tại
         localStorage.setItem('currentUser', JSON.stringify(user));
-        console.log('User logged in:', user);
+        console.log('✅ User logged in:', user.username);
         showNotification('Đăng nhập thành công!');
         
         setTimeout(() => {
@@ -131,7 +147,7 @@ function handleLogin(e) {
 
 // Khởi tạo sự kiện khi DOM loaded
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM loaded - Initializing auth system');
+    console.log('🚀 DOM loaded - Initializing auth system');
     
     // Khởi tạo dữ liệu
     initializeData();
@@ -139,19 +155,15 @@ document.addEventListener('DOMContentLoaded', function() {
     // Đăng ký form
     const registerForm = document.getElementById('registerForm');
     if (registerForm) {
-        console.log('Register form found');
+        console.log('✅ Register form found');
         registerForm.addEventListener('submit', handleRegister);
-    } else {
-        console.log('Register form not found');
     }
     
     // Đăng nhập form
     const loginForm = document.getElementById('loginForm');
     if (loginForm) {
-        console.log('Login form found');
+        console.log('✅ Login form found');
         loginForm.addEventListener('submit', handleLogin);
-    } else {
-        console.log('Login form not found');
     }
 });
 
